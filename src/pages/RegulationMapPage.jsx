@@ -11,7 +11,7 @@ const toCoord  = (s) => {
 }
 const normalizeResult = (raw) => ({
   ...raw,
-  displayName: raw?.displayName ?? '결과 없음',
+  displayName: (raw?.displayName && raw.displayName.trim() !== '') ? raw.displayName : null,
   summaryText: raw?.summaryText ?? '요약 정보가 없습니다.',
   overlayFlags: {
     hasAnyRestriction:             !!raw?.overlayFlags?.hasAnyRestriction,
@@ -33,8 +33,11 @@ const S = {
 }
 
 export default function RegulationMapPage() {
+  const [searchText, setSearchText]                 = useState('')
   const [selectedCoordinate, setSelectedCoordinate] = useState(null)
+  const [lookupInfo, setLookupInfo]                 = useState({ mode: 'none', label: '' })
   const [result, setResult]                         = useState(null)
+  const [savedResults, setSavedResults]             = useState([])
   const [loading, setLoading]                       = useState(false)
   const [error, setError]                           = useState(null)
   const mapRef      = useRef(null)
@@ -52,7 +55,9 @@ export default function RegulationMapPage() {
     const id = ++seqRef.current
 
     setSelectedCoordinate(coord)
+    setLookupInfo({ mode: 'coordinate', label: '좌표 기준 조회' })
     setLoading(true); setError(null); setResult(null)
+    // Map click must NOT modify searchText
 
     try {
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL ?? ''}/api/regulation-check/coordinate`, {
@@ -73,7 +78,6 @@ export default function RegulationMapPage() {
       const safe = normalizeResult(raw)
       setResult(safe)
 
-      // 백엔드는 result.coordinate가 아닌 result.input에 좌표를 반환
       const resultCoord = toCoord(raw?.input)
       if (resultCoord) setSelectedCoordinate(resultCoord)
     } catch (e) {
@@ -85,19 +89,48 @@ export default function RegulationMapPage() {
     }
   }, [loading])
 
-  const handleAddressSelect = useCallback((lat, lon, preloadedResult) => {
+  // ── 세션 저장 핸들러 ────────────────────────────────────────────────
+  const handleSaveResult = useCallback(() => {
+    if (!result || loading) return;
+    const newItem = {
+      id: Date.now(),
+      label: lookupInfo.label || '선택 지점',
+      coordinate: selectedCoordinate,
+      lookupInfo: { ...lookupInfo },
+      result: { ...result },
+      timestamp: new Date().toLocaleTimeString()
+    };
+    setSavedResults(prev => [newItem, ...prev].slice(0, 5)); // 최대 5건 유지
+  }, [result, lookupInfo, selectedCoordinate, loading]);
+
+  const handleRestoreResult = useCallback((item) => {
+    setSelectedCoordinate(item.coordinate);
+    setLookupInfo(item.lookupInfo);
+    setResult(item.result);
+    mapRef.current?.setView([item.coordinate.lat, item.coordinate.lon], 16);
+  }, []);
+
+  const handleDeleteSaved = useCallback((id) => {
+    setSavedResults(prev => prev.filter(it => it.id !== id));
+  }, []);
+
+  const handleAddressSelect = useCallback((lat, lon, preloadedResult, address) => {
     const coord = toCoord({ lat, lon })
     if (!coord) { setError('좌표 정보를 찾을 수 없습니다.'); return }
+    
+    // Update searchText only when an address is explicitly selected
+    if (address) setSearchText(address)
     mapRef.current?.setView([coord.lat, coord.lon], 16)
 
+    setSelectedCoordinate(coord)
+    setLookupInfo({ mode: 'address', label: address || '주소 기준 조회' })
+
     if (preloadedResult) {
-      // 단일 후보: POST /address 응답의 regulationResult를 직접 사용 (/coordinate 재호출 불필요)
-      setSelectedCoordinate(coord)
       setResult(normalizeResult(preloadedResult))
       setError(null)
       setLoading(false)
     } else {
-      // 복수 후보 수동 선택: /coordinate 호출
+      setLoading(true); setError(null); setResult(null)
       handleMapClick(coord.lat, coord.lon)
     }
   }, [handleMapClick])
@@ -107,7 +140,12 @@ export default function RegulationMapPage() {
       <div className="rmp-layout" style={S.layout}>
         <section className="rmp-map" style={S.mapWrap}>
           <div style={S.search}>
-            <AddressSearchBox onCandidateSelect={handleAddressSelect} disabled={loading} />
+            <AddressSearchBox 
+              searchText={searchText}
+              onSearchTextChange={setSearchText}
+              onCandidateSelect={handleAddressSelect} 
+              disabled={loading} 
+            />
           </div>
           <div style={S.mapInner}>
             <RegulationMapView
@@ -123,9 +161,14 @@ export default function RegulationMapPage() {
           <div style={S.scroll}>
             <ResultSummaryPanel
               selectedCoordinate={selectedCoordinate}
+              lookupInfo={lookupInfo}
               result={result}
               loading={loading}
               error={error}
+              savedResults={savedResults}
+              onSave={handleSaveResult}
+              onRestore={handleRestoreResult}
+              onDeleteSaved={handleDeleteSaved}
             />
           </div>
         </aside>

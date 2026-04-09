@@ -16,14 +16,12 @@ function getLabel(c) {
 }
 
 /**
- * onCandidateSelect(lat, lon, regulationResult?)
+ * onCandidateSelect(lat, lon, regulationResult?, addressText?)
  *   - lat, lon: 선택된 좌표
  *   - regulationResult: POST /address 응답에 포함된 법규 결과 (단일 후보 자동선택 시만 전달)
- *     → 전달 시 Page에서 /coordinate 재호출 없이 직접 사용 가능
- *     → 복수 후보 수동 선택 시 null (Page에서 /coordinate 호출)
+ *   - addressText: 선택된 주소 문자열
  */
-export default function AddressSearchBox({ onCandidateSelect, disabled }) {
-  const [query, setQuery]           = useState('')
+export default function AddressSearchBox({ searchText, onSearchTextChange, onCandidateSelect, disabled }) {
   const [candidates, setCandidates] = useState([])
   const [searching, setSearching]   = useState(false)
   const [msg, setMsg]               = useState('')
@@ -32,11 +30,10 @@ export default function AddressSearchBox({ onCandidateSelect, disabled }) {
 
   async function handleSearch(e) {
     e.preventDefault()
-    const kw = query.trim()
+    const kw = (searchText || '').trim()
     if (!kw || disabled || searching) return
     setSearching(true); clear()
     try {
-      // POST /api/regulation-check/address → candidates + regulationResult 포함 응답
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL ?? ''}/api/regulation-check/address`, {
         method: 'POST',
         headers: {
@@ -49,17 +46,15 @@ export default function AddressSearchBox({ onCandidateSelect, disabled }) {
       if (!res.ok) throw new Error()
 
       const data = await res.json()
-      // AddressCheckResponseDto: { candidates, selected, regulationResult, candidateCount, ... }
       const arr = Array.isArray(data.candidates) ? data.candidates : []
       if (!arr.length) { setMsg('검색 결과 없음'); return }
 
       if (arr.length === 1) {
-        // 단일 후보: regulationResult를 함께 전달 → /coordinate 재호출 불필요
         selectWithResult(arr[0], data.regulationResult ?? null)
         return
       }
-      // 복수 후보: 리스트 표시 (선택 시 regulationResult 없음 → Page에서 /coordinate 호출)
       setCandidates(arr)
+      setMsg('동일/유사 주소가 여러 건 있습니다. 아래 목록에서 선택하세요.')
     } catch { setMsg('주소 검색에 실패했습니다.') }
     finally { setSearching(false) }
   }
@@ -68,13 +63,15 @@ export default function AddressSearchBox({ onCandidateSelect, disabled }) {
     const lat = c.latitude
     const lon = c.longitude
     if (lat == null || lon == null) { setMsg('좌표 정보를 찾을 수 없습니다.'); return }
-    setQuery(c.address || '')
+    
+    const addr = c.address || ''
+    // clear local search state
     clear()
-    onCandidateSelect(lat, lon, regulationResult)
+    // pass selected data to page
+    onCandidateSelect(lat, lon, regulationResult, addr)
   }
 
   function selectFromList(c) {
-    // 복수 후보 선택: regulationResult 없음 → Page에서 /coordinate 호출
     selectWithResult(c, null)
   }
 
@@ -82,8 +79,8 @@ export default function AddressSearchBox({ onCandidateSelect, disabled }) {
     <form onSubmit={handleSearch} style={S.wrap}>
       <div style={S.row}>
         <input
-          value={query}
-          onChange={(e) => { setQuery(e.target.value); clear() }}
+          value={searchText}
+          onChange={(e) => { onSearchTextChange(e.target.value); clear() }}
           placeholder="주소 검색"
           disabled={disabled}
           style={S.input}
