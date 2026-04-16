@@ -1,0 +1,1770 @@
+[
+  // ==========================================================================
+  // law_layer_rules.json  — 법규 레이어 규칙 데이터 사전
+  //
+  // [필드 안내]
+  //   id          : 고유 ID (LL-{USE}-{LAYER}-{SEQ})
+  //   version     : 규칙 버전 (내용 변경 시 올림)
+  //   isActive    : false이면 런타임 제외 (삭제 대신 비활성화)
+  //   sortOrder   : 같은 레이어·용도 내 표시 순서 (오름차순, 오버레이=1)
+  //   selectedUse : 단일 적용 용도 ("*" = 전체 공통)
+  //   applicableUses : 복수 용도 공유 시 목록 (현재는 단일 용도와 동일)
+  //   layerType   : "core" | "extendedCore" | "mep"
+  //   law         : 표시용 법령명 (Core/ExtendedCore)
+  //   scope       : 표시용 적용 범위 요약 (Core/ExtendedCore)
+  //   title       : 표시용 제목 (MEP)
+  //   teamTag     : 담당 팀 (MEP)
+  //   legalBasis  : 조문 단위 법규 근거 (관리용, 5개 샘플에 기입)
+  //   practicalNote: 실무 유의사항 (관리자용, UI 미표시)
+  //   source      : 항상 "rule"
+  //   confidence  : 항상 "low"
+  //   trigger     : 포함 조건
+  // ==========================================================================
+
+  // ── 공동주택 Core (7개) ────────────────────────────────────────────────────
+  {
+    "id": "LL-APT-CORE-001", "version": "1.1", "isActive": true, "sortOrder": 10,
+    "selectedUse": "공동주택", "applicableUses": ["공동주택"], "layerType": "core",
+    "law": "건축법 제11조·제4조",
+    "scope": "건축허가·건축위원회 심의 (21세대 이상 심의 필요)",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 11,
+        "clauseTextSummary": "건축물 건축에 관한 건축허가 대상 규정",
+        "normalizedKey": "건축법/11"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 4,
+        "clauseTextSummary": "건축위원회 설치 및 심의 규정",
+        "normalizedKey": "건축법/4"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 5,
+        "paragraph": 1,
+        "subParagraph": "2",
+        "clauseTextSummary": "공동주택 21세대 이상 건축위원회 심의 대상 열거",
+        "normalizedKey": "건축법시행령/5/1/2"
+      }
+    ],
+    "practicalNote": "21세대 이상 공동주택은 건축위원회 심의 대상. 심의 신청 후 결과까지 통상 4~8주 소요. 인허가 일정 계획 시 반드시 반영.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-APT-CORE-002", "version": "1.1", "isActive": true, "sortOrder": 20,
+    "selectedUse": "공동주택", "applicableUses": ["공동주택"], "layerType": "core",
+    "law": "국토계획법 제76조·시행령 별표 4",
+    "scope": "용도지역별 공동주택 허용 여부 및 건폐율·용적률 상한",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 76,
+        "clauseTextSummary": "용도지역별 건축물 용도·건폐율·용적률 제한 기준",
+        "normalizedKey": "국토계획법/76"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 77,
+        "clauseTextSummary": "용도지역별 건폐율 상한 (주거전용 20~50%, 일반주거 40~70%)",
+        "normalizedKey": "국토계획법/77"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 78,
+        "clauseTextSummary": "용도지역별 용적률 상한 (제2종전용 50~150%, 제1종일반 60~200%)",
+        "normalizedKey": "국토계획법/78"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "국토의 계획 및 이용에 관한 법률 시행령",
+        "appendixRef": "별표4",
+        "clauseTextSummary": "제2종전용주거지역 건축 가능 건축물 목록 (공동주택 허용 조건)",
+        "normalizedKey": "국토계획법시행령/별표4"
+      }
+    ],
+    "practicalNote": "공동주택은 제2종전용주거지역 이상에서 허용. 용도지역 유형별로 별표 4~8까지 구분되므로 대상 지역 유형 확인 필수. 조례 용적률은 법정 상한보다 낮은 경우가 다수이므로 반드시 조례 기준값으로 사업성 분석.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-APT-CORE-003", "version": "1.1", "isActive": true, "sortOrder": 30,
+    "selectedUse": "공동주택", "applicableUses": ["공동주택"], "layerType": "core",
+    "law": "건축법 제49조·시행령 제34조~36조",
+    "scope": "직통계단·피난계단·특별피난계단 설치 기준",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 49,
+        "clauseTextSummary": "피난시설·방화구획 설치 의무 (건축물 안전 기본 규정)",
+        "normalizedKey": "건축법/49"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 34,
+        "clauseTextSummary": "직통계단 설치 기준 (2개소 이상, 거실 각 부분~계단 보행거리 제한)",
+        "normalizedKey": "건축법시행령/34"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 35,
+        "clauseTextSummary": "피난계단 설치 기준 (5층 이상 층에서 지상으로 통하는 직통계단)",
+        "normalizedKey": "건축법시행령/35"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 36,
+        "clauseTextSummary": "특별피난계단 설치 기준 (11층 이상 또는 지하 3층 이하)",
+        "normalizedKey": "건축법시행령/36"
+      }
+    ],
+    "practicalNote": "계단 코어 위치·면적은 평면 계획의 핵심 변수. 층수·세대수 기준으로 필요 계단 유형을 설계 착수 전 확정해야 평면 재설계 리스크 최소화.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-APT-CORE-004", "version": "1.1", "isActive": true, "sortOrder": 40,
+    "selectedUse": "공동주택", "applicableUses": ["공동주택"], "layerType": "core",
+    "law": "건축법 제50조·제52조·시행령 제46조",
+    "scope": "내화구조·방화구획 대상 및 면적 기준",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 50,
+        "clauseTextSummary": "건축물 주요 구조부 내화구조 기준",
+        "normalizedKey": "건축법/50"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 52,
+        "clauseTextSummary": "건축물 외벽 마감재료 기준 (6층 이상 불연·준불연 의무)",
+        "normalizedKey": "건축법/52"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 46,
+        "clauseTextSummary": "방화구획 설치 기준 (매 층·1,000㎡ 이내 구획 원칙)",
+        "normalizedKey": "건축법시행령/46"
+      }
+    ],
+    "practicalNote": "방화구획은 층별·면적별·용도별 복합 적용. 지하주차장·1층 로비 등 대공간 구획 계획은 소방·건축 협력 사전 협의 필수. 스프링클러 설치 시 구획 면적 완화 가능.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-APT-CORE-005", "version": "1.1", "isActive": true, "sortOrder": 50,
+    "selectedUse": "공동주택", "applicableUses": ["공동주택"], "layerType": "core",
+    "law": "건축법 제61조·시행령 제86조",
+    "scope": "일조권 사선 제한·채광·환기 기준",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 61,
+        "clauseTextSummary": "일조 등 확보를 위한 건축물 높이 제한 (인접 대지 경계선·도로 기준)",
+        "normalizedKey": "건축법/61"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 86,
+        "clauseTextSummary": "공동주택 일조·채광·환기 세부 기준 (인접 세대 간 이격 거리 포함)",
+        "normalizedKey": "건축법시행령/86"
+      }
+    ],
+    "practicalNote": "일조 사선제한은 전면도로·측면도로·인접 대지 경계선에 따라 복합 적용. 배치 계획 초기에 일조 시뮬레이션(동지 기준 2시간 이상 일조 확보)을 실시하지 않으면 상층부 면적이 크게 줄어드는 리스크 발생.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-APT-CORE-006", "version": "1.1", "isActive": true, "sortOrder": 60,
+    "selectedUse": "공동주택", "applicableUses": ["공동주택"], "layerType": "core",
+    "law": "주차장법 제19조·해당 시·군·구 조례",
+    "scope": "세대수 기준 부설주차장 설치 기준",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "주차장법",
+        "article": 19,
+        "clauseTextSummary": "부설주차장 설치 의무 (시설 용도·규모별 기준)",
+        "normalizedKey": "주차장법/19"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "주차장법 시행령",
+        "appendixRef": "별표1",
+        "clauseTextSummary": "부설주차장 설치 기준 — 공동주택 세대당·전용면적별 주차대수",
+        "normalizedKey": "주차장법시행령/별표1"
+      },
+      {
+        "referenceType": "ordinance",
+        "lawName": "해당 시·군·구 주차장 설치 조례",
+        "article": 1,
+        "clauseTextSummary": "지자체 강화 기준 — 서울시 등 세대수·전용면적별 강화 기준 적용",
+        "normalizedKey": "주차장조례/지역별기준"
+      }
+    ],
+    "practicalNote": "지하주차장 면적은 공사비의 30~40% 차지. 세대당 1.5대 이상 요구하는 지자체에서는 초기 사업성 분석에 반드시 반영. 법정 기준과 조례 기준 중 강한 쪽 적용.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-APT-CORE-007", "version": "1.1", "isActive": true, "sortOrder": 70,
+    "selectedUse": "공동주택", "applicableUses": ["공동주택"], "layerType": "core",
+    "law": "장애인·노인·임산부 등의 편의증진 보장에 관한 법률",
+    "scope": "장애인 편의시설 설치 의무 (30세대 이상)",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "장애인·노인·임산부 등의 편의증진 보장에 관한 법률",
+        "article": 8,
+        "clauseTextSummary": "편의시설 설치 의무 대상 (30세대 이상 공동주택 포함)",
+        "normalizedKey": "장애인편의법/8"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "장애인·노인·임산부 등의 편의증진 보장에 관한 법률 시행령",
+        "appendixRef": "별표2",
+        "clauseTextSummary": "편의시설 세부 설치 기준 — 공동주택 의무 시설 목록 및 규격",
+        "normalizedKey": "장애인편의법시행령/별표2"
+      }
+    ],
+    "practicalNote": "장애인 주차구역·경사로·승강기 사양은 인허가 도서 명시 의무. 미반영 시 허가 반려 또는 착공 후 변경 공사 발생. 특히 단지 내 보행로 기울기·폭 기준 초기 반영 필요.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+
+  // ── 제1종근린생활시설 Core (6개) ────────────────────────────────────────────
+  {
+    "id": "LL-NH1-CORE-001", "version": "1.1", "isActive": true, "sortOrder": 10,
+    "selectedUse": "제1종근린생활시설", "applicableUses": ["제1종근린생활시설"], "layerType": "core",
+    "law": "건축법 제11조·제14조",
+    "scope": "건축허가(연면적 100㎡ 초과) 또는 신고(이하) 구분",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 11,
+        "clauseTextSummary": "건축허가 대상 — 신축·증축·개축·재축 등 (연면적 100㎡ 초과)",
+        "normalizedKey": "건축법/11"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 14,
+        "clauseTextSummary": "건축신고 대상 — 연면적 100㎡ 이하 신축 또는 소규모 증·개축",
+        "normalizedKey": "건축법/14"
+      }
+    ],
+    "practicalNote": "소규모 근린생활시설은 허가·신고 구분이 공사 착수 시점에 영향. 연면적 100㎡ 경계 전후로 절차 기간·비용 차이 존재. 신고 대상도 일부 지자체는 사전 검토 요구 사례 있음.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH1-CORE-002", "version": "1.1", "isActive": true, "sortOrder": 20,
+    "selectedUse": "제1종근린생활시설", "applicableUses": ["제1종근린생활시설"], "layerType": "core",
+    "law": "국토계획법 제76조·시행령 별표 4",
+    "scope": "용도지역별 제1종 허용 여부·건폐율·용적률",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 76,
+        "clauseTextSummary": "용도지역별 건축물 용도 제한",
+        "normalizedKey": "국토계획법/76"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 77,
+        "clauseTextSummary": "건폐율 기준",
+        "normalizedKey": "국토계획법/77"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 78,
+        "clauseTextSummary": "용적률 기준",
+        "normalizedKey": "국토계획법/78"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "국토의 계획 및 이용에 관한 법률 시행령",
+        "article": null,
+        "appendixRef": "별표4",
+        "clauseTextSummary": "용도지역별 건축 제한 — 제1종근린생활시설 업종별 허용 여부 및 밀도 기준",
+        "normalizedKey": "국토계획법시행령/별표4"
+      }
+    ],
+    "practicalNote": "전용주거지역에서도 일부 제1종 허용(소매점·의원 등). 시행령 별표4 업종 목록과 계획 업종 대조 필수. 조례로 강화된 건폐율·용적률 상한 적용 여부 지자체 확인.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH1-CORE-003", "version": "1.1", "isActive": true, "sortOrder": 30,
+    "selectedUse": "제1종근린생활시설", "applicableUses": ["제1종근린생활시설"], "layerType": "core",
+    "law": "건축법 제49조·시행령 제34조",
+    "scope": "직통계단 설치 기준 (3층 이상·5층 이상)",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 49,
+        "clauseTextSummary": "피난시설·방화구획 설치 의무",
+        "normalizedKey": "건축법/49"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 34,
+        "clauseTextSummary": "직통계단 설치 기준 (3층 이상 1개소, 5층 이상 2개소 원칙)",
+        "normalizedKey": "건축법시행령/34"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 35,
+        "clauseTextSummary": "피난계단 설치 기준 (5층 이상 또는 지하 2층 이하)",
+        "normalizedKey": "건축법시행령/35"
+      }
+    ],
+    "practicalNote": "소규모 상업건물에서 3층·5층 기준점이 계단 코어 추가 설치 여부를 결정. 층수 조절로 기준 회피 가능한지 초기 검토 필요. 피난 동선과 임대 면적 효율은 트레이드오프 관계.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH1-CORE-004", "version": "1.1", "isActive": true, "sortOrder": 40,
+    "selectedUse": "제1종근린생활시설", "applicableUses": ["제1종근린생활시설"], "layerType": "core",
+    "law": "건축법 제50조·시행령 제46조",
+    "scope": "내화구조·방화구획 (3층 이상 또는 연면적 1,000㎡ 이상)",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 50,
+        "clauseTextSummary": "내화구조 대상 건축물 (3층 이상 또는 연면적 1,000㎡ 이상)",
+        "normalizedKey": "건축법/50"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 46,
+        "clauseTextSummary": "방화구획 설치 기준 — 매 1,000㎡마다 구획, 스프링클러 설치 시 3배 완화",
+        "normalizedKey": "건축법시행령/46"
+      }
+    ],
+    "practicalNote": "스프링클러 설치 시 방화구획 면적 3,000㎡까지 완화. 3층 이상 소규모 상업건물에서 내화구조 추가 공사비와 스프링클러 비용 비교 검토 권장.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH1-CORE-005", "version": "1.1", "isActive": true, "sortOrder": 50,
+    "selectedUse": "제1종근린생활시설", "applicableUses": ["제1종근린생활시설"], "layerType": "core",
+    "law": "주차장법 제19조·해당 시·군·구 조례",
+    "scope": "시설 연면적 기준 주차대수 산정",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "주차장법",
+        "article": 19,
+        "clauseTextSummary": "부설주차장 설치 의무 — 시설 규모별 주차대수 기준",
+        "normalizedKey": "주차장법/19"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "주차장법 시행령",
+        "article": null,
+        "appendixRef": "별표1",
+        "clauseTextSummary": "시설물 종류별 부설주차장 설치 기준 (근린생활시설 산정 비율)",
+        "normalizedKey": "주차장법시행령/별표1"
+      },
+      {
+        "referenceType": "ordinance",
+        "lawName": "해당 시·군·구 주차장 설치 조례",
+        "article": 1,
+        "clauseTextSummary": "지자체 강화 기준 — 관할 지자체 조례 개별 확인 필수",
+        "normalizedKey": "주차장조례/지역별기준"
+      }
+    ],
+    "practicalNote": "도심 상업지역 소규모 필지는 주차대수 확보가 사실상 불가능한 경우 있음. 감면 조건(대중교통 접근성 등) 지자체별 상이 — 사전 협의 필수.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH1-CORE-006", "version": "1.1", "isActive": true, "sortOrder": 60,
+    "selectedUse": "제1종근린생활시설", "applicableUses": ["제1종근린생활시설"], "layerType": "core",
+    "law": "건축법 제44조·제46조",
+    "scope": "접도 요건 및 건축선 후퇴 기준",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 44,
+        "clauseTextSummary": "대지와 도로의 관계 — 최소 접도 폭 4m 이상 (소규모 건축물 예외 조항 있음)",
+        "normalizedKey": "건축법/44"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 46,
+        "clauseTextSummary": "건축선 지정 및 후퇴 기준",
+        "normalizedKey": "건축법/46"
+      }
+    ],
+    "practicalNote": "접도 폭 미달은 허가 반려 사유 1위. 4m 미만 도로에 접한 대지는 도로 폭원 확보 방법(사도 개설·인접 토지 사용승낙) 먼저 검토. 건축선 후퇴 시 용적률 산정 기준 면적 변동 확인.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+
+  // ── 제2종근린생활시설 Core (6개) ────────────────────────────────────────────
+  {
+    "id": "LL-NH2-CORE-001", "version": "1.1", "isActive": true, "sortOrder": 10,
+    "selectedUse": "제2종근린생활시설", "applicableUses": ["제2종근린생활시설"], "layerType": "core",
+    "law": "건축법 제11조·다중이용업소 안전관리에 관한 특별법",
+    "scope": "건축허가 + 다중이용업소 안전시설 완비 확인서",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 11,
+        "clauseTextSummary": "건축허가 대상 — 신축·증축·개축 등",
+        "normalizedKey": "건축법/11"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "다중이용업소의 안전관리에 관한 특별법",
+        "article": 9,
+        "clauseTextSummary": "다중이용업소 안전시설 완비증명서 — 영업 개시 전 소방서 발급 필수",
+        "normalizedKey": "다중이용업소법/9"
+      }
+    ],
+    "practicalNote": "고시원·노래연습장·PC방 등 다중이용업소는 건축허가와 별도로 소방서 안전시설 완비증명서 취득 필수. 설계 단계부터 소방 협의 병행하지 않으면 공사 완료 후 영업 불가 사태 발생 가능.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH2-CORE-002", "version": "1.1", "isActive": true, "sortOrder": 20,
+    "selectedUse": "제2종근린생활시설", "applicableUses": ["제2종근린생활시설"], "layerType": "core",
+    "law": "국토계획법 제76조·시행령 별표 4",
+    "scope": "용도지역별 제2종 허용 여부·업종별 면적 기준",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 76,
+        "clauseTextSummary": "용도지역별 건축물 용도 제한",
+        "normalizedKey": "국토계획법/76"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 77,
+        "clauseTextSummary": "건폐율 기준",
+        "normalizedKey": "국토계획법/77"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 78,
+        "clauseTextSummary": "용적률 기준",
+        "normalizedKey": "국토계획법/78"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "국토의 계획 및 이용에 관한 법률 시행령",
+        "article": null,
+        "appendixRef": "별표4",
+        "clauseTextSummary": "용도지역별 제2종근린생활시설 업종별 허용 여부 (제1종전용주거지역 전면 불허 등)",
+        "normalizedKey": "국토계획법시행령/별표4"
+      }
+    ],
+    "practicalNote": "제1종전용주거지역은 제2종 전면 불허. 제2·3종일반주거지역은 업종별 상이. 학원 500㎡ 이상 → 교육연구시설 재분류. 업종+면적 이중 기준 동시 확인 필수.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH2-CORE-003", "version": "1.1", "isActive": true, "sortOrder": 30,
+    "selectedUse": "제2종근린생활시설", "applicableUses": ["제2종근린생활시설"], "layerType": "core",
+    "law": "건축법 제49조·시행령 제34조~36조",
+    "scope": "직통계단·피난계단 설치 기준",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 49,
+        "clauseTextSummary": "피난시설·방화구획 설치 의무",
+        "normalizedKey": "건축법/49"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 34,
+        "clauseTextSummary": "직통계단 설치 기준 (3층 이상 1개소, 5층 이상 2개소)",
+        "normalizedKey": "건축법시행령/34"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 35,
+        "clauseTextSummary": "피난계단 설치 기준 (5층 이상 또는 지하 2층 이하)",
+        "normalizedKey": "건축법시행령/35"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 36,
+        "clauseTextSummary": "특별피난계단 설치 기준 (11층 이상)",
+        "normalizedKey": "건축법시행령/36"
+      }
+    ],
+    "practicalNote": "고시원·노래연습장 등 다중이용업소는 일반 기준 외에 다중이용업소법 강화 피난 기준 동시 적용. 비상구 위치·피난유도선 설치까지 함께 검토.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH2-CORE-004", "version": "1.1", "isActive": true, "sortOrder": 40,
+    "selectedUse": "제2종근린생활시설", "applicableUses": ["제2종근린생활시설"], "layerType": "core",
+    "law": "건축법 제50조·시행령 제46조",
+    "scope": "내화구조·방화구획 (다중이용업소 강화 기준 별도)",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 50,
+        "clauseTextSummary": "내화구조 적용 대상 (3층 이상 또는 연면적 1,000㎡ 이상)",
+        "normalizedKey": "건축법/50"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 46,
+        "clauseTextSummary": "방화구획 설치 기준 — 1,000㎡마다 구획, 스프링클러 설치 시 3배 완화",
+        "normalizedKey": "건축법시행령/46"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "다중이용업소의 안전관리에 관한 특별법",
+        "article": 9,
+        "clauseTextSummary": "다중이용업소 안전시설 완비 — 방화구획 외 강화 기준 별도 적용",
+        "normalizedKey": "다중이용업소법/9"
+      }
+    ],
+    "practicalNote": "노래연습장·PC방·고시원은 방화구획 기준과 별개로 다중이용업소법 안전시설 완비증명서 취득 필수. 내화구조 공사비 + 스프링클러 비용 비교 검토.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH2-CORE-005", "version": "1.1", "isActive": true, "sortOrder": 50,
+    "selectedUse": "제2종근린생활시설", "applicableUses": ["제2종근린생활시설"], "layerType": "core",
+    "law": "주차장법 제19조·해당 시·군·구 조례",
+    "scope": "시설 연면적 기준 주차대수 산정",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "주차장법",
+        "article": 19,
+        "clauseTextSummary": "부설주차장 설치 의무 — 시설 규모별 주차대수 기준",
+        "normalizedKey": "주차장법/19"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "주차장법 시행령",
+        "article": null,
+        "appendixRef": "별표1",
+        "clauseTextSummary": "시설물 종류별 부설주차장 설치 기준 (근린생활시설 산정 비율)",
+        "normalizedKey": "주차장법시행령/별표1"
+      },
+      {
+        "referenceType": "ordinance",
+        "lawName": "해당 시·군·구 주차장 설치 조례",
+        "article": 1,
+        "clauseTextSummary": "지자체 강화 기준 — 관할 지자체 조례 개별 확인 필수",
+        "normalizedKey": "주차장조례/지역별기준"
+      }
+    ],
+    "practicalNote": "학원·고시원 등 이용자 밀도가 높은 업종은 법정 기준 이상 확보 권장. 도심 입지 감면 조건 지자체별 상이 — 사전 협의 필수.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH2-CORE-006", "version": "1.1", "isActive": true, "sortOrder": 60,
+    "selectedUse": "제2종근린생활시설", "applicableUses": ["제2종근린생활시설"], "layerType": "core",
+    "law": "건축법 제44조·제46조",
+    "scope": "접도 요건 및 건축선 후퇴 기준",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 44,
+        "clauseTextSummary": "대지와 도로의 관계 — 최소 접도 폭 4m 이상",
+        "normalizedKey": "건축법/44"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 46,
+        "clauseTextSummary": "건축선 지정 및 후퇴 기준",
+        "normalizedKey": "건축법/46"
+      }
+    ],
+    "practicalNote": "다수 이용자 출입 시설은 접도 폭 미달 시 소방차 접근로 확보 불가로 허가 반려 위험. 학원 등 이용자 빈도가 높은 업종일수록 초기 동선 계획 필수.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+
+  // ── 업무시설 Core (7개) ────────────────────────────────────────────────────
+  {
+    "id": "LL-OFF-CORE-001", "version": "1.1", "isActive": true, "sortOrder": 10,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"], "layerType": "core",
+    "law": "건축법 제11조·제4조",
+    "scope": "건축허가·건축위원회 심의 (연면적 5,000㎡ 이상)",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 11,
+        "clauseTextSummary": "건축허가 대상 — 신축·증축·개축·재축 등",
+        "normalizedKey": "건축법/11"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 4,
+        "clauseTextSummary": "건축위원회 설치 및 심의 대상 — 연면적 5,000㎡ 이상 등 대형 건축물",
+        "normalizedKey": "건축법/4"
+      }
+    ],
+    "practicalNote": "연면적 5,000㎡ 이상 업무시설은 건축위원회 심의 필수. 심의 기간(통상 2~4개월) 사업 일정에 반영 필요. 심의 결과에 따라 설계 대폭 변경 가능성 있음 — 조기 착수 권장.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-OFF-CORE-002", "version": "1.1", "isActive": true, "sortOrder": 20,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"], "layerType": "core",
+    "law": "국토계획법 제76조·시행령 별표 4",
+    "scope": "용도지역별 업무시설 허용 여부·건폐율·용적률",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 76,
+        "clauseTextSummary": "용도지역별 건축물 용도 제한 — 업무시설 허용 용도지역 확인",
+        "normalizedKey": "국토계획법/76"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 77,
+        "clauseTextSummary": "건폐율 기준",
+        "normalizedKey": "국토계획법/77"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 78,
+        "clauseTextSummary": "용적률 기준",
+        "normalizedKey": "국토계획법/78"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "국토의 계획 및 이용에 관한 법률 시행령",
+        "article": null,
+        "appendixRef": "별표4",
+        "clauseTextSummary": "용도지역별 업무시설 허용 여부 (주거전용지역 불허, 일반주거·상업·준공업지역 조건부 허용)",
+        "normalizedKey": "국토계획법시행령/별표4"
+      }
+    ],
+    "practicalNote": "주거전용지역 업무시설 불허. 준주거지역·상업지역 용적률 인센티브 조건(공공기여) 지자체별 상이. 오피스텔은 일반 업무시설과 허가 요건·주차 기준 다름 — 유형 확정 선행 필수.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-OFF-CORE-003", "version": "1.1", "isActive": true, "sortOrder": 30,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"], "layerType": "core",
+    "law": "건축법 제49조·시행령 제34조~36조",
+    "scope": "피난계단·특별피난계단 설치 기준 (11층 이상)",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 49,
+        "clauseTextSummary": "피난시설·방화구획 설치 의무",
+        "normalizedKey": "건축법/49"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 34,
+        "clauseTextSummary": "직통계단 설치 기준 (5층 이상 2개소)",
+        "normalizedKey": "건축법시행령/34"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 35,
+        "clauseTextSummary": "피난계단 설치 기준 (5층 이상)",
+        "normalizedKey": "건축법시행령/35"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 36,
+        "clauseTextSummary": "특별피난계단 설치 기준 (11층 이상 — 전실·방연 기준 포함)",
+        "normalizedKey": "건축법시행령/36"
+      }
+    ],
+    "practicalNote": "11층 이상은 특별피난계단(전실 포함) 필수. 코어 계단 위치·전실 면적이 층당 임대 효율에 직결. 고층일수록 계단 코어를 설계 초기에 확정 후 구조 협의 진행.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-OFF-CORE-004", "version": "1.1", "isActive": true, "sortOrder": 40,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"], "layerType": "core",
+    "law": "건축법 제50조·제52조",
+    "scope": "내화구조·외장재 불연 기준 (커튼월 포함)",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 50,
+        "clauseTextSummary": "내화구조 대상 건축물 — 업무시설은 전층 내화구조 원칙",
+        "normalizedKey": "건축법/50"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 52,
+        "clauseTextSummary": "건축물 마감재료 불연·준불연 기준 — 외벽(커튼월 포함) 불연재료 적용",
+        "normalizedKey": "건축법/52"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 46,
+        "clauseTextSummary": "방화구획 기준 — 업무시설 층별·면적별 구획",
+        "normalizedKey": "건축법시행령/46"
+      }
+    ],
+    "practicalNote": "커튼월 외장재 불연 기준 강화(2023년 이후 개정 반영). 외장재 시방 확정 전 건축법 52조 불연·준불연 구분 확인 필수. 고층일수록 외장 공사비 비중 증가 — 초기 시방 결정이 원가 관리 핵심.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-OFF-CORE-005", "version": "1.1", "isActive": true, "sortOrder": 50,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"], "layerType": "core",
+    "law": "건축법 제64조",
+    "scope": "승강기 설치 (6층 이상) 및 비상용 승강기 (10층 이상)",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 64,
+        "clauseTextSummary": "승강기 설치 의무 (6층 이상) 및 비상용 승강기 (10층 이상)",
+        "normalizedKey": "건축법/64"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 89,
+        "clauseTextSummary": "승강기 설치 기준 — 대수 산정 방법 (연면적·층수 기준)",
+        "normalizedKey": "건축법시행령/89"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "장애인·노인·임산부 등의 편의증진 보장에 관한 법률",
+        "article": 8,
+        "clauseTextSummary": "편의시설 설치 의무 — 장애인용 승강기 대상 및 기준",
+        "normalizedKey": "장애인편의법/8"
+      }
+    ],
+    "practicalNote": "법정 최소 대수(연면적 3,000㎡당 1대 기준)는 출퇴근 피크 시 혼잡도 높아 임차인 유치에 불리. 비상용 승강기 위치는 소방·피난 동선과 연동. 고층은 서비스 승강기 별도 계획.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-OFF-CORE-006", "version": "1.1", "isActive": true, "sortOrder": 60,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"], "layerType": "core",
+    "law": "주차장법 제19조·도시교통정비 촉진법",
+    "scope": "연면적 기준 주차대수 및 교통영향평가 연동",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "주차장법",
+        "article": 19,
+        "clauseTextSummary": "부설주차장 설치 의무 — 시설 규모별 주차대수 기준",
+        "normalizedKey": "주차장법/19"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "주차장법 시행령",
+        "article": null,
+        "appendixRef": "별표1",
+        "clauseTextSummary": "업무시설 부설주차장 설치 기준 (연면적 150㎡당 1대 기준 등)",
+        "normalizedKey": "주차장법시행령/별표1"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "도시교통정비 촉진법",
+        "article": 15,
+        "clauseTextSummary": "교통영향평가 대상 — 업무시설 연면적 5,000㎡ 이상",
+        "normalizedKey": "도시교통정비법/15"
+      },
+      {
+        "referenceType": "ordinance",
+        "lawName": "해당 시·군·구 주차장 설치 조례",
+        "article": 1,
+        "clauseTextSummary": "지자체 강화 기준 및 공개공지 감면 조건 — 관할 지자체 조례 개별 확인",
+        "normalizedKey": "주차장조례/지역별기준"
+      }
+    ],
+    "practicalNote": "연면적 5,000㎡ 이상은 교통영향평가 필수 — 결과에 따라 주차 대수 추가·진출입로 개선 요구 가능. 지하주차장 층수·기계식 여부가 공사비에 미치는 영향 사전 시뮬레이션 권장.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-OFF-CORE-007", "version": "1.1", "isActive": true, "sortOrder": 70,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"], "layerType": "core",
+    "law": "건축법 제44조·제46조",
+    "scope": "접도 요건·건축선 후퇴·차량 진출입 동선",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 44,
+        "clauseTextSummary": "대지와 도로의 관계 — 최소 접도 폭 4m 이상 (대형 건축물은 6m 이상 요구 가능)",
+        "normalizedKey": "건축법/44"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 46,
+        "clauseTextSummary": "건축선 지정 및 후퇴 기준 — 도심 간선도로 인접 시 강화 적용",
+        "normalizedKey": "건축법/46"
+      }
+    ],
+    "practicalNote": "업무시설은 차량 하역·방문자·서비스 동선 분리 필요. 접도 폭과 건축선 후퇴 적용 후 저층부 로비·상업공간 배치 가능 여부 재산출 필수. 대형 부지 대지분할·합필 검토 병행.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+
+  // ── Core 오버레이 — 지구단위계획구역 (전체 용도 공통) ────────────────────────
+  {
+    "id": "LL-OVL-DUP-001", "version": "1.1", "isActive": true, "sortOrder": 1,
+    "selectedUse": "*", "applicableUses": ["*"], "layerType": "core",
+    "law": "지구단위계획 개별 지침 (관할 구청 도시계획과)",
+    "scope": "지구단위계획구역 내에서는 개별 지침이 건축법·국토계획법 일반 규정보다 우선 적용됩니다. 건폐율·용적률·건축선·용도 등 모든 항목을 개별 지침 기준으로 재확인하세요.",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 49,
+        "clauseTextSummary": "지구단위계획구역의 지정 근거",
+        "normalizedKey": "국토계획법/49"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 50,
+        "clauseTextSummary": "지구단위계획의 내용 (건폐율·용적률·건축선 등)",
+        "normalizedKey": "국토계획법/50"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 52,
+        "clauseTextSummary": "지구단위계획의 수립 기준 (국토부 장관 고시)",
+        "normalizedKey": "국토계획법/52"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "국토의 계획 및 이용에 관한 법률 시행령",
+        "article": 43,
+        "clauseTextSummary": "지구단위계획구역 지정 절차 (제43조~제46조 범위 포함)",
+        "normalizedKey": "국토계획법시행령/43"
+      },
+      {
+        "referenceType": "notice",
+        "lawName": "도시·군관리계획 수립지침",
+        "appendixRef": "제4편제1장",
+        "clauseTextSummary": "지구단위계획 수립 기준 — 용도·밀도·건축선 결정 방법",
+        "normalizedKey": "도시군관리계획수립지침/지구단위계획"
+      }
+    ],
+    "practicalNote": "관할 구청 도시계획과 방문 수령 필수 (민원24 조회 불가인 경우 다수). 결정도·지침서 미확인 상태로 설계 진행 시 건축선·용도 위반으로 허가 반려됨.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": false, "whenDistrictUnitPlan": true }
+  },
+
+  // ── 공동주택 ExtendedCore (4개) ────────────────────────────────────────────
+  {
+    "id": "LL-APT-EXCL-001", "version": "1.1", "isActive": true, "sortOrder": 10,
+    "selectedUse": "공동주택", "applicableUses": ["공동주택"], "layerType": "extendedCore",
+    "law": "소방시설 설치 및 관리에 관한 법률",
+    "scope": "스프링클러·자동화재탐지설비 설치 (전층 의무)",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "소방시설 설치 및 관리에 관한 법률",
+        "article": 12,
+        "clauseTextSummary": "소방시설의 설치 및 관리 의무",
+        "normalizedKey": "소방시설법/12"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "소방시설 설치 및 관리에 관한 법률 시행령",
+        "appendixRef": "별표4",
+        "clauseTextSummary": "소방시설 설치 기준 — 공동주택 스프링클러 전층 의무",
+        "normalizedKey": "소방시설법시행령/별표4"
+      }
+    ],
+    "practicalNote": "공동주택 전층 스프링클러 의무. 세대 내 배관·헤드 계획은 기계팀 협력 필수. 소방서 사전 협의 일정을 설계 초기에 확정해야 함.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-APT-EXCL-002", "version": "1.1", "isActive": true, "sortOrder": 20,
+    "selectedUse": "공동주택", "applicableUses": ["공동주택"], "layerType": "extendedCore",
+    "law": "건축법 시행령 제32조·건축물 내진설계 기준",
+    "scope": "내진설계 대상 여부 및 내진등급 결정",
+    "legalBasis": [
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 32,
+        "clauseTextSummary": "내진설계 대상 건축물 기준 (2층 이상 또는 연면적 200㎡ 이상)",
+        "normalizedKey": "건축법시행령/32"
+      },
+      {
+        "referenceType": "notice",
+        "lawName": "건축물 내진설계 기준",
+        "appendixRef": "내진등급기준",
+        "clauseTextSummary": "내진등급 I·II 구분 및 지진구역별 설계 기준 (중요도 계수 포함)",
+        "normalizedKey": "건축물내진설계기준/내진등급"
+      }
+    ],
+    "practicalNote": "공동주택은 내진등급 I (중요도 계수 1.2) 적용 대상. 구조 설계사 선정 전 내진등급·지진구역 확인 후 계약. 지진구역 I (서울·경기·영남 등)에서 강화 기준 적용.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-APT-EXCL-003", "version": "1.1", "isActive": true, "sortOrder": 30,
+    "selectedUse": "공동주택", "applicableUses": ["공동주택"], "layerType": "extendedCore",
+    "law": "건축물의 에너지절약 설계기준",
+    "scope": "단열 기준·에너지절약계획서 (연면적 500㎡ 이상)",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "녹색건축물 조성 지원법",
+        "article": 14,
+        "clauseTextSummary": "에너지절약계획서 제출 의무 (연면적 500㎡ 이상 신축)",
+        "normalizedKey": "녹색건축물법/14"
+      },
+      {
+        "referenceType": "notice",
+        "lawName": "건축물 에너지절약 설계기준",
+        "appendixRef": "열관류율기준",
+        "clauseTextSummary": "지역별 외벽·지붕·바닥·창호 열관류율 기준값",
+        "normalizedKey": "건축물에너지설계기준/열관류율"
+      }
+    ],
+    "practicalNote": "에너지절약계획서는 인허가 첨부 서류. 단열·창호·설비 종합 검토 필요. ZEB(제로에너지건축물) 의무화 로드맵(2030년 민간 의무화)도 함께 확인하여 장기 운영 비용 리스크 반영.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-APT-EXCL-004", "version": "1.1", "isActive": true, "sortOrder": 40,
+    "selectedUse": "공동주택", "applicableUses": ["공동주택"], "layerType": "extendedCore",
+    "law": "공동주택관리법·건축법 시행령 제51조",
+    "scope": "급배수·위생시설 및 공동주택 관리 규약",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "공동주택관리법",
+        "article": 35,
+        "clauseTextSummary": "공동주택 시설 기준 — 급배수·위생설비·관리사무소·관리 규약",
+        "normalizedKey": "공동주택관리법/35"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 51,
+        "clauseTextSummary": "거실 채광·환기·위생설비 최소 기준",
+        "normalizedKey": "건축법시행령/51"
+      }
+    ],
+    "practicalNote": "급배수 계획은 기계팀 협력 필수. 층간 배관 경로가 세대 평면에 직접 영향을 주므로 설계 초기 기계 협의 선행 필요. 욕실·주방 배치 변경 시 하층 세대 영향 검토.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+
+  // ── 제1종근린생활시설 ExtendedCore (4개) ────────────────────────────────────
+  {
+    "id": "LL-NH1-EXCL-001", "version": "1.1", "isActive": true, "sortOrder": 10,
+    "selectedUse": "제1종근린생활시설", "applicableUses": ["제1종근린생활시설"], "layerType": "extendedCore",
+    "law": "소방시설 설치 및 관리에 관한 법률",
+    "scope": "연면적 400㎡ 이상 자동화재탐지설비 설치",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "소방시설 설치 및 관리에 관한 법률",
+        "article": 12,
+        "clauseTextSummary": "특정소방대상물에 소방시설 설치·관리 기준 적용 의무",
+        "normalizedKey": "소방시설법/12"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "소방시설 설치 및 관리에 관한 법률 시행령",
+        "article": null,
+        "appendixRef": "별표4",
+        "clauseTextSummary": "특정소방대상물 소방시설 설치 기준 — 근린생활시설 400㎡ 이상 자동화재탐지설비 의무",
+        "normalizedKey": "소방시설법시행령/별표4"
+      }
+    ],
+    "practicalNote": "연면적 400㎡ 기준 — 소규모 근린생활시설에서도 자탐설비 설치비 발생. 설비 공사비 예산에 반드시 반영. 의원·탁구장 등 업종별 강화 기준 추가 확인.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH1-EXCL-002", "version": "1.1", "isActive": true, "sortOrder": 20,
+    "selectedUse": "제1종근린생활시설", "applicableUses": ["제1종근린생활시설"], "layerType": "extendedCore",
+    "law": "건축법 시행령 제32조",
+    "scope": "내진설계 대상 여부 (2층 이상 또는 연면적 500㎡ 이상)",
+    "legalBasis": [
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 32,
+        "clauseTextSummary": "내진설계 대상 건축물 — 2층 이상 또는 연면적 500㎡ 이상",
+        "normalizedKey": "건축법시행령/32"
+      },
+      {
+        "referenceType": "notice",
+        "lawName": "건축물 내진설계 기준",
+        "article": null,
+        "appendixRef": "내진등급",
+        "clauseTextSummary": "내진등급 I·II 구분 및 각 등급별 내진성능 수준",
+        "normalizedKey": "건축물내진설계기준/내진등급"
+      }
+    ],
+    "practicalNote": "2층·연면적 500㎡ 기준 — 소규모 상업건물도 내진설계 대상 포함될 수 있음. 구조 설계 단계에서 내진등급 확정 필수. 공사비 예산 반영 여부 확인.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH1-EXCL-003", "version": "1.1", "isActive": true, "sortOrder": 30,
+    "selectedUse": "제1종근린생활시설", "applicableUses": ["제1종근린생활시설"], "layerType": "extendedCore",
+    "law": "건축물의 에너지절약 설계기준",
+    "scope": "단열 기준·에너지절약계획서 제출 여부",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "녹색건축물 조성 지원법",
+        "article": 14,
+        "clauseTextSummary": "건축물 에너지절약계획서 제출 대상 — 연면적 500㎡ 이상 냉난방 건축물",
+        "normalizedKey": "녹색건축물법/14"
+      },
+      {
+        "referenceType": "notice",
+        "lawName": "건축물의 에너지절약 설계기준",
+        "article": null,
+        "appendixRef": "열관류율",
+        "clauseTextSummary": "용도별·지역별 최소 단열 기준 (열관류율) — 비주거 냉난방 기준 적용",
+        "normalizedKey": "건축물에너지설계기준/열관류율"
+      }
+    ],
+    "practicalNote": "연면적 500㎡ 이상이면 에너지절약계획서 제출 의무 발생. 단열재 사양이 확정되지 않으면 허가 도서 작성 불가. 의원·체육시설 등 냉난방 부하가 큰 업종은 설비 용량 연동 검토 필요.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH1-EXCL-004", "version": "1.1", "isActive": true, "sortOrder": 40,
+    "selectedUse": "제1종근린생활시설", "applicableUses": ["제1종근린생활시설"], "layerType": "extendedCore",
+    "law": "건축법 시행령 제51조",
+    "scope": "업종별 화장실·급배수 위생 기준",
+    "legalBasis": [
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 51,
+        "clauseTextSummary": "화장실·오수 정화시설 설치 기준 — 업종별 편의·위생시설 의무",
+        "normalizedKey": "건축법시행령/51"
+      }
+    ],
+    "practicalNote": "음식점·의원 등 업종별 화장실 설치 수량 및 급배수 기준 상이. 건축 설계 단계에서 급배수 계획과 연동. 오수처리 설비 위치는 토목·건축 협의 사항.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+
+  // ── 제2종근린생활시설 ExtendedCore (4개) ────────────────────────────────────
+  {
+    "id": "LL-NH2-EXCL-001", "version": "1.1", "isActive": true, "sortOrder": 10,
+    "selectedUse": "제2종근린생활시설", "applicableUses": ["제2종근린생활시설"], "layerType": "extendedCore",
+    "law": "소방시설 설치 및 관리에 관한 법률·다중이용업소법",
+    "scope": "다중이용업소 강화 소방시설 기준 적용",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "소방시설 설치 및 관리에 관한 법률",
+        "article": 12,
+        "clauseTextSummary": "특정소방대상물 소방시설 설치·관리 기준 적용 의무",
+        "normalizedKey": "소방시설법/12"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "소방시설 설치 및 관리에 관한 법률 시행령",
+        "article": null,
+        "appendixRef": "별표4",
+        "clauseTextSummary": "다중이용업소(노래연습장·고시원 등) 강화 소방시설 설치 기준",
+        "normalizedKey": "소방시설법시행령/별표4"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "다중이용업소의 안전관리에 관한 특별법",
+        "article": 9,
+        "clauseTextSummary": "다중이용업소 안전시설 완비증명서 — 영업허가 전 소방서 발급 필수",
+        "normalizedKey": "다중이용업소법/9"
+      }
+    ],
+    "practicalNote": "설계 초기부터 소방서 사전 협의 필수. 영업허가 선결 요건으로 완비증명서 발급까지 1~3개월 소요. 스프링클러·자탐설비 사양은 소방 설계 전문업체에 위임.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH2-EXCL-002", "version": "1.1", "isActive": true, "sortOrder": 20,
+    "selectedUse": "제2종근린생활시설", "applicableUses": ["제2종근린생활시설"], "layerType": "extendedCore",
+    "law": "다중이용업소의 안전관리에 관한 특별법 제9조",
+    "scope": "비상구·피난유도 강화 기준 (고시원·노래연습장 등)",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "다중이용업소의 안전관리에 관한 특별법",
+        "article": 9,
+        "clauseTextSummary": "다중이용업소 안전시설 등의 설치·유지 의무",
+        "normalizedKey": "다중이용업소법/9"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "다중이용업소의 안전관리에 관한 특별법 시행령",
+        "article": null,
+        "appendixRef": "별표2",
+        "clauseTextSummary": "비상구·피난유도선·피난유도등 설치 기준 — 고시원·노래연습장 강화 적용",
+        "normalizedKey": "다중이용업소법시행령/별표2"
+      }
+    ],
+    "practicalNote": "고시원 비상구는 층별 외부 대피 가능 구조 필수. 피난유도등·피난유도선 위치 설계 단계에서 소방 협의. 복층 구성 시 각 층별 비상구 확보 여부 별도 확인.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH2-EXCL-003", "version": "1.1", "isActive": true, "sortOrder": 30,
+    "selectedUse": "제2종근린생활시설", "applicableUses": ["제2종근린생활시설"], "layerType": "extendedCore",
+    "law": "건축법 시행령 제32조",
+    "scope": "내진설계 대상 여부 (2층 이상 또는 연면적 500㎡ 이상)",
+    "legalBasis": [
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 32,
+        "clauseTextSummary": "내진설계 대상 건축물 — 2층 이상 또는 연면적 500㎡ 이상",
+        "normalizedKey": "건축법시행령/32"
+      },
+      {
+        "referenceType": "notice",
+        "lawName": "건축물 내진설계 기준",
+        "article": null,
+        "appendixRef": "내진등급",
+        "clauseTextSummary": "내진등급 I·II 구분 및 지진구역별 설계 기준",
+        "normalizedKey": "건축물내진설계기준/내진등급"
+      }
+    ],
+    "practicalNote": "소규모 상업건물도 2층 이상이면 내진설계 대상 포함. 구조 설계 초기에 내진등급 결정. 학원·고시원 등 불특정 다수 이용 시설은 내진 중요도 확인 권장.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH2-EXCL-004", "version": "1.1", "isActive": true, "sortOrder": 40,
+    "selectedUse": "제2종근린생활시설", "applicableUses": ["제2종근린생활시설"], "layerType": "extendedCore",
+    "law": "건축물의 에너지절약 설계기준·건축법 시행령 제51조",
+    "scope": "단열·위생 기준 및 에너지절약계획서",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "녹색건축물 조성 지원법",
+        "article": 14,
+        "clauseTextSummary": "건축물 에너지절약계획서 제출 대상 — 연면적 500㎡ 이상",
+        "normalizedKey": "녹색건축물법/14"
+      },
+      {
+        "referenceType": "notice",
+        "lawName": "건축물의 에너지절약 설계기준",
+        "article": null,
+        "appendixRef": "열관류율",
+        "clauseTextSummary": "용도별·지역별 단열 기준 (열관류율) — 비주거 기준 적용",
+        "normalizedKey": "건축물에너지설계기준/열관류율"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 51,
+        "clauseTextSummary": "화장실·오수 정화시설 설치 기준 — 업종별 편의·위생시설 의무",
+        "normalizedKey": "건축법시행령/51"
+      }
+    ],
+    "practicalNote": "고시원·노래연습장은 환기·위생 기준이 일반 상업시설보다 강화 적용. 에너지절약계획서 제출 대상 해당 시 단열재 사양 확정 후 허가 도서 작성.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+
+  // ── 업무시설 ExtendedCore (4개) ────────────────────────────────────────────
+  {
+    "id": "LL-OFF-EXCL-001", "version": "1.1", "isActive": true, "sortOrder": 10,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"], "layerType": "extendedCore",
+    "law": "소방시설 설치 및 관리에 관한 법률",
+    "scope": "스프링클러 전층 설치 (연면적 6,000㎡ 이상)",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "소방시설 설치 및 관리에 관한 법률",
+        "article": 12,
+        "clauseTextSummary": "특정소방대상물 소방시설 설치·관리 기준 의무",
+        "normalizedKey": "소방시설법/12"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "소방시설 설치 및 관리에 관한 법률 시행령",
+        "article": null,
+        "appendixRef": "별표4",
+        "clauseTextSummary": "업무시설 스프링클러 전층 설치 기준 — 연면적 6,000㎡ 이상",
+        "normalizedKey": "소방시설법시행령/별표4"
+      }
+    ],
+    "practicalNote": "연면적 6,000㎡ 이상 업무시설은 스프링클러 전층 의무. 소방서 사전 협의 후 설계 착수 — 펌프실·배관 계통이 구조·기계 설계와 연동됨. 소방설계 전문업체 조기 선정 권장.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-OFF-EXCL-002", "version": "1.1", "isActive": true, "sortOrder": 20,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"], "layerType": "extendedCore",
+    "law": "건축법 시행령 제32조·고층건축물 안전관리에 관한 특별법",
+    "scope": "내진설계 및 풍하중 계산 (고층 필수)",
+    "legalBasis": [
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 32,
+        "clauseTextSummary": "내진설계 대상 건축물 — 2층 이상 또는 연면적 500㎡ 이상",
+        "normalizedKey": "건축법시행령/32"
+      },
+      {
+        "referenceType": "notice",
+        "lawName": "건축물 내진설계 기준",
+        "article": null,
+        "appendixRef": "내진등급",
+        "clauseTextSummary": "내진등급 I·II 구분 및 지진구역별 설계 기준",
+        "normalizedKey": "건축물내진설계기준/내진등급"
+      },
+      {
+        "referenceType": "notice",
+        "lawName": "건축구조기준",
+        "article": null,
+        "appendixRef": "풍하중기준",
+        "clauseTextSummary": "풍하중 계산 기준 — 고층(30층 이상) 필수 적용, 외장재 고정부 검토",
+        "normalizedKey": "건축구조기준/풍하중기준"
+      }
+    ],
+    "practicalNote": "고층 업무시설은 풍하중이 구조 설계 지배 하중이 될 수 있음. 내진등급 + 풍하중 계산 결과가 구조 단면 결정 — 설계 초기 구조 엔지니어 조기 투입 필수.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-OFF-EXCL-003", "version": "1.1", "isActive": true, "sortOrder": 30,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"], "layerType": "extendedCore",
+    "law": "건축물의 에너지절약 설계기준·녹색건축물 조성 지원법",
+    "scope": "에너지절약계획서 (500㎡ 이상) 및 녹색건축 인증",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "녹색건축물 조성 지원법",
+        "article": 14,
+        "clauseTextSummary": "건축물 에너지절약계획서 제출 대상 — 연면적 500㎡ 이상 냉난방 건축물",
+        "normalizedKey": "녹색건축물법/14"
+      },
+      {
+        "referenceType": "notice",
+        "lawName": "건축물의 에너지절약 설계기준",
+        "article": null,
+        "appendixRef": "열관류율",
+        "clauseTextSummary": "용도별·지역별 단열 기준 (열관류율) — 업무시설 비주거 기준 적용",
+        "normalizedKey": "건축물에너지설계기준/열관류율"
+      }
+    ],
+    "practicalNote": "연면적 500㎡ 이상이면 에너지절약계획서 제출 의무. 녹색건축 인증(G-SEED)은 공공기여 인센티브와 연계되는 경우 있음 — 분양·임대 마케팅 활용 가능성 검토.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-OFF-EXCL-004", "version": "1.1", "isActive": true, "sortOrder": 40,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"], "layerType": "extendedCore",
+    "law": "건축법 시행령 제51조·환경부 기준",
+    "scope": "급배수·위생시설 및 오수처리 기준",
+    "legalBasis": [
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 51,
+        "clauseTextSummary": "화장실·오수 정화시설 설치 기준 — 업무시설 층별 위생시설 수량",
+        "normalizedKey": "건축법시행령/51"
+      },
+      {
+        "referenceType": "enforcementRule",
+        "lawName": "건축물의 설비기준 등에 관한 규칙",
+        "article": 17,
+        "clauseTextSummary": "급배수설비 설치 기준 — 업무시설 급수 계통 및 배수 설계",
+        "normalizedKey": "건축물설비기준규칙/17"
+      }
+    ],
+    "practicalNote": "대형 업무시설은 층별 화장실 수량·위치가 임차인 유치에 영향. 기계식 주차장 연동 오수 처리 설비 위치 사전 결정 필요. 공사비 중 위생·급배수 비중 사전 산출 권장.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+
+  // ── ExtendedCore 오버레이 — 개발제한구역 (전체 용도 공통) ────────────────────
+  {
+    "id": "LL-OVL-DAR-001", "version": "1.1", "isActive": true, "sortOrder": 1,
+    "selectedUse": "*", "applicableUses": ["*"], "layerType": "extendedCore",
+    "law": "개발제한구역의 지정 및 관리에 관한 특별조치법",
+    "scope": "개발제한구역(그린벨트) 내에서는 신축·증축·용도변경이 원칙적으로 금지됩니다. 허용 행위 목록(시행령 별표 1)과 관할 시·군·구 허가 가능 여부를 먼저 확인하세요.",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "개발제한구역의 지정 및 관리에 관한 특별조치법",
+        "article": 12,
+        "clauseTextSummary": "개발제한구역 내 건축물 건축 등 금지 행위 규정",
+        "normalizedKey": "개발제한구역법/12"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "개발제한구역의 지정 및 관리에 관한 특별조치법 시행령",
+        "article": 13,
+        "clauseTextSummary": "허용 행위 세부 기준 (제13조~제22조 범위 포함)",
+        "normalizedKey": "개발제한구역법시행령/13"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "개발제한구역의 지정 및 관리에 관한 특별조치법 시행령",
+        "appendixRef": "별표1",
+        "clauseTextSummary": "개발제한구역 내 허용 건축행위 목록 (신축 가능 용도·규모)",
+        "normalizedKey": "개발제한구역법시행령/별표1"
+      }
+    ],
+    "practicalNote": "별표 1 허용 행위 목록에 없으면 원칙 불허. 지자체 '개발행위 허가 사전상담'을 먼저 진행. 허가 가능 여부 미확인 상태에서 설계 착수 금지.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": false, "whenDevelopmentRestriction": true }
+  },
+
+  // ── 공동주택 MEP (4개) ──────────────────────────────────────────────────────
+  {
+    "id": "LL-APT-MEP-001", "version": "1.1", "isActive": true, "sortOrder": 10,
+    "selectedUse": "공동주택", "applicableUses": ["공동주택"], "layerType": "mep",
+    "title": "전기설비: 수전 용량 설계 및 한국전력 사전 협의", "teamTag": "전기팀",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "전기사업법",
+        "article": 67,
+        "clauseTextSummary": "전기공급시설의 설치 및 공급 기준",
+        "normalizedKey": "전기사업법/67"
+      },
+      {
+        "referenceType": "guideline",
+        "lawName": "한국전력공사 배전공사 시방서",
+        "appendixRef": "수전방식기준",
+        "clauseTextSummary": "수전 방식 결정 및 인입 공사 절차 (한전 협의 대상)",
+        "normalizedKey": "한전배전시방서/수전방식기준"
+      }
+    ],
+    "practicalNote": "세대 수전 용량 산정 후 한국전력 수전 방식 협의 필요. 협의~공사 완료 통상 3~6개월. 설계 초기에 용량 산정 선행 필요.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-APT-MEP-002", "version": "1.1", "isActive": true, "sortOrder": 20,
+    "selectedUse": "공동주택", "applicableUses": ["공동주택"], "layerType": "mep",
+    "title": "기계설비: 세대별 냉난방·환기(0.5회/h 이상) 설계", "teamTag": "기계팀",
+    "legalBasis": [
+      {
+        "referenceType": "enforcementRule",
+        "lawName": "건축물의 설비기준 등에 관한 규칙",
+        "article": 11,
+        "clauseTextSummary": "기계환기설비 설치 기준 — 공동주택 세대 환기량 0.5회/h 이상",
+        "normalizedKey": "건축물설비기준규칙/11"
+      },
+      {
+        "referenceType": "notice",
+        "lawName": "공동주택 환기설비 설치기준",
+        "article": null,
+        "appendixRef": "환기량기준",
+        "clauseTextSummary": "공동주택 세대별 최소 환기량 및 설비 사양 기준",
+        "normalizedKey": "공동주택환기설치기준/환기량기준"
+      }
+    ],
+    "practicalNote": "공동주택 세대 환기 0.5회/h 의무. 열회수형 환기장치(HRV) 채택 시 에너지 절감 효과. 기계실·닥트 계통은 구조 슬래브 타공과 연동 — 구조·기계팀 협의 필수.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-APT-MEP-003", "version": "1.1", "isActive": true, "sortOrder": 30,
+    "selectedUse": "공동주택", "applicableUses": ["공동주택"], "layerType": "mep",
+    "title": "소방설비: 스프링클러·피난유도등 설계 및 소방서 협의", "teamTag": "소방팀",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "소방시설 설치 및 관리에 관한 법률",
+        "article": 12,
+        "clauseTextSummary": "공동주택 소방시설 설치·관리 기준 — 스프링클러 전층 의무",
+        "normalizedKey": "소방시설법/12"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "소방시설 설치 및 관리에 관한 법률 시행령",
+        "article": null,
+        "appendixRef": "별표4",
+        "clauseTextSummary": "공동주택 소방시설 설치 기준 (스프링클러, 피난유도등, 자탐설비 포함)",
+        "normalizedKey": "소방시설법시행령/별표4"
+      }
+    ],
+    "practicalNote": "소방서 사전 협의 일정이 설계 크리티컬 패스. 세대 내 스프링클러 헤드 위치는 인테리어 계획과 충돌 가능 — 실시 설계 단계 조율 필요.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-APT-MEP-004", "version": "1.1", "isActive": true, "sortOrder": 40,
+    "selectedUse": "공동주택", "applicableUses": ["공동주택"], "layerType": "mep",
+    "title": "급배수설비: 급수·오수 계통 설계", "teamTag": "위생팀",
+    "legalBasis": [
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 51,
+        "clauseTextSummary": "화장실·오수 정화시설 설치 기준",
+        "normalizedKey": "건축법시행령/51"
+      },
+      {
+        "referenceType": "enforcementRule",
+        "lawName": "건축물의 설비기준 등에 관한 규칙",
+        "article": 17,
+        "clauseTextSummary": "급배수·위생설비 설치 기준 — 공동주택 세대별 급수 계통 설계",
+        "normalizedKey": "건축물설비기준규칙/17"
+      }
+    ],
+    "practicalNote": "공동주택 세대 급수 방식(직결·가압·탱크) 결정은 수압·층수 연동. 오수 계통 층별 배관 슬래브 타공 계획은 구조 설계와 협의 필수.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+
+  // ── 제1종근린생활시설 MEP (4개) ─────────────────────────────────────────────
+  {
+    "id": "LL-NH1-MEP-001", "version": "1.1", "isActive": true, "sortOrder": 10,
+    "selectedUse": "제1종근린생활시설", "applicableUses": ["제1종근린생활시설"], "layerType": "mep",
+    "title": "전기설비: 업종별 부하 용량 산정 및 분전반 설계", "teamTag": "전기팀",
+    "legalBasis": [
+      {
+        "referenceType": "guideline",
+        "lawName": "전기설비기술기준",
+        "article": null,
+        "appendixRef": "부하용량기준",
+        "clauseTextSummary": "전기설비 부하 용량 산정 기준 — 용도별 수용률·부하밀도",
+        "normalizedKey": "전기설비기술기준/부하용량기준"
+      }
+    ],
+    "practicalNote": "의원·체육시설 등은 냉난방·의료기기 부하 크므로 용량 여유 확보 필요. 분전반 위치·수량은 임대 단위와 연동. 한전 수전 용량 협의 전 부하 계산 선행.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH1-MEP-002", "version": "1.1", "isActive": true, "sortOrder": 20,
+    "selectedUse": "제1종근린생활시설", "applicableUses": ["제1종근린생활시설"], "layerType": "mep",
+    "title": "기계설비: 업종별 냉난방·환기(주방 배기 포함) 설계", "teamTag": "기계팀",
+    "legalBasis": [
+      {
+        "referenceType": "enforcementRule",
+        "lawName": "건축물의 설비기준 등에 관한 규칙",
+        "article": 11,
+        "clauseTextSummary": "기계환기설비 설치 기준 — 비주거 용도 환기량 기준",
+        "normalizedKey": "건축물설비기준규칙/11"
+      }
+    ],
+    "practicalNote": "음식점 주방 배기는 이웃 입점 업종과 냄새 민원 직결 — 배기 경로 설계 초기 확정 필수. 의원·체육시설은 환기량 강화 기준 별도 적용 가능.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH1-MEP-003", "version": "1.1", "isActive": true, "sortOrder": 30,
+    "selectedUse": "제1종근린생활시설", "applicableUses": ["제1종근린생활시설"], "layerType": "mep",
+    "title": "소방설비: 소방서 사전 협의 및 설비 설계", "teamTag": "소방팀",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "소방시설 설치 및 관리에 관한 법률",
+        "article": 12,
+        "clauseTextSummary": "소방시설 설치·관리 기준 적용 의무",
+        "normalizedKey": "소방시설법/12"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "소방시설 설치 및 관리에 관한 법률 시행령",
+        "article": null,
+        "appendixRef": "별표4",
+        "clauseTextSummary": "근린생활시설 소방시설 설치 기준 (자탐설비·소화기 등)",
+        "normalizedKey": "소방시설법시행령/별표4"
+      }
+    ],
+    "practicalNote": "연면적 400㎡ 이상 자탐설비 의무. 소방서 사전 협의 → 설비 사양 확정 → 소방 도서 제출. 건축허가 도서 제출 전 소방 설계 완료 시점 관리 필요.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH1-MEP-004", "version": "1.1", "isActive": true, "sortOrder": 40,
+    "selectedUse": "제1종근린생활시설", "applicableUses": ["제1종근린생활시설"], "layerType": "mep",
+    "title": "급배수설비: 업종별 급배수 계통 설계", "teamTag": "위생팀",
+    "legalBasis": [
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 51,
+        "clauseTextSummary": "화장실·오수 정화시설 설치 기준 — 업종별 위생시설 수량",
+        "normalizedKey": "건축법시행령/51"
+      }
+    ],
+    "practicalNote": "음식점·의원 업종은 급배수 수요가 일반 상업시설보다 높음. 업종별 급수 계통 분리 여부 초기 결정 필요. 오수 계통은 토목·건축 협의 사항.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+
+  // ── 제2종근린생활시설 MEP (4개) ─────────────────────────────────────────────
+  {
+    "id": "LL-NH2-MEP-001", "version": "1.1", "isActive": true, "sortOrder": 10,
+    "selectedUse": "제2종근린생활시설", "applicableUses": ["제2종근린생활시설"], "layerType": "mep",
+    "title": "전기설비: 다중이용업소 전기안전 기준 확인", "teamTag": "전기팀",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "다중이용업소의 안전관리에 관한 특별법",
+        "article": 9,
+        "clauseTextSummary": "다중이용업소 안전시설 — 전기안전 점검 및 완비증명서 포함",
+        "normalizedKey": "다중이용업소법/9"
+      },
+      {
+        "referenceType": "guideline",
+        "lawName": "전기설비기술기준",
+        "article": null,
+        "appendixRef": "부하용량기준",
+        "clauseTextSummary": "다중이용업소 전기부하 용량 산정 기준",
+        "normalizedKey": "전기설비기술기준/부하용량기준"
+      }
+    ],
+    "practicalNote": "고시원·노래연습장 PC방 등은 전기 부하 밀도 높음. 분전반 위치와 차단기 용량 사전 결정 필수. 영업허가 전 전기안전점검 통과 필요.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH2-MEP-002", "version": "1.1", "isActive": true, "sortOrder": 20,
+    "selectedUse": "제2종근린생활시설", "applicableUses": ["제2종근린생활시설"], "layerType": "mep",
+    "title": "기계설비: 다중이용업소 강제 환기·배기 설계", "teamTag": "기계팀",
+    "legalBasis": [
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "다중이용업소의 안전관리에 관한 특별법 시행령",
+        "article": null,
+        "appendixRef": "별표2",
+        "clauseTextSummary": "다중이용업소 안전시설 중 환기·배기 설치 기준",
+        "normalizedKey": "다중이용업소법시행령/별표2"
+      },
+      {
+        "referenceType": "enforcementRule",
+        "lawName": "건축물의 설비기준 등에 관한 규칙",
+        "article": 11,
+        "clauseTextSummary": "기계환기설비 설치 기준 — 다중이용업소 강제 환기량",
+        "normalizedKey": "건축물설비기준규칙/11"
+      }
+    ],
+    "practicalNote": "노래연습장·PC방은 강제 환기 필수. 배기 덕트 경로가 외벽 관통 위치와 직결 — 건축 설계와 협의 필요. 소방 협의 완비증명서 발급 전 환기 계획 확정.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH2-MEP-003", "version": "1.1", "isActive": true, "sortOrder": 30,
+    "selectedUse": "제2종근린생활시설", "applicableUses": ["제2종근린생활시설"], "layerType": "mep",
+    "title": "소방설비: 다중이용업소 소방서 협의 (영업허가 선결)", "teamTag": "소방팀",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "다중이용업소의 안전관리에 관한 특별법",
+        "article": 9,
+        "clauseTextSummary": "다중이용업소 안전시설 완비증명서 — 소방서 발급, 영업허가 선결 조건",
+        "normalizedKey": "다중이용업소법/9"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "소방시설 설치 및 관리에 관한 법률 시행령",
+        "article": null,
+        "appendixRef": "별표4",
+        "clauseTextSummary": "다중이용업소 소방시설 설치 기준 강화 적용",
+        "normalizedKey": "소방시설법시행령/별표4"
+      }
+    ],
+    "practicalNote": "영업허가 전 소방서 완비증명서 취득 필수(건축사용승인과 별개). 설계 단계부터 소방 설계 병행. 완비증명서 발급 지연이 오픈 일정 지연으로 직결.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-NH2-MEP-004", "version": "1.1", "isActive": true, "sortOrder": 40,
+    "selectedUse": "제2종근린생활시설", "applicableUses": ["제2종근린생활시설"], "layerType": "mep",
+    "title": "급배수설비: 위생시설 설치 기준 확인", "teamTag": "위생팀",
+    "legalBasis": [
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 51,
+        "clauseTextSummary": "화장실·오수 정화시설 설치 기준 — 업종별 위생시설 수량",
+        "normalizedKey": "건축법시행령/51"
+      }
+    ],
+    "practicalNote": "고시원·노래연습장은 이용자 밀도 높아 화장실 수량·위치 계획 중요. 급수 압력 부족 시 가압 펌프 추가 — 기계팀 협의.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+
+  // ── 업무시설 MEP (5개) ──────────────────────────────────────────────────────
+  {
+    "id": "LL-OFF-MEP-001", "version": "1.1", "isActive": true, "sortOrder": 10,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"], "layerType": "mep",
+    "title": "전기설비: 수전 방식(특고압/고압) 및 비상발전 설계", "teamTag": "전기팀",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "전기사업법",
+        "article": 67,
+        "clauseTextSummary": "전기공급시설 설치 및 공급 기준 — 수전 방식 결정 근거",
+        "normalizedKey": "전기사업법/67"
+      },
+      {
+        "referenceType": "guideline",
+        "lawName": "한국전력공사 배전공사 시방서",
+        "article": null,
+        "appendixRef": "수전방식기준",
+        "clauseTextSummary": "고압·특고압 수전 방식 결정 및 한전 협의 절차",
+        "normalizedKey": "한전배전시방서/수전방식기준"
+      }
+    ],
+    "practicalNote": "대형 업무시설은 특고압(22.9kV) 수전 필요할 수 있음. 한전 협의~수전 설비 공사 완료 6~12개월 — 사업 일정 최우선 선행 과제. 비상발전기 용량·위치는 구조 하중 연동.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-OFF-MEP-002", "version": "1.1", "isActive": true, "sortOrder": 20,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"], "layerType": "mep",
+    "title": "기계설비: 중앙 공조 방식 선택 및 기계실 위치 확정", "teamTag": "기계팀",
+    "legalBasis": [
+      {
+        "referenceType": "enforcementRule",
+        "lawName": "건축물의 설비기준 등에 관한 규칙",
+        "article": 11,
+        "clauseTextSummary": "기계환기·공조설비 설치 기준 — 업무시설 중앙 공조 기준",
+        "normalizedKey": "건축물설비기준규칙/11"
+      }
+    ],
+    "practicalNote": "중앙 공조(CAV/VAV) vs. 개별 공조(EHP) 선택이 층별 임대 단위 구성에 직결. 기계실 면적·위치는 건물 코어 및 구조 계획과 연동 — 설계 초기 결정 필수.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-OFF-MEP-003", "version": "1.1", "isActive": true, "sortOrder": 30,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"], "layerType": "mep",
+    "title": "소방설비: 고층 스프링클러·피난설비 소방서 협의", "teamTag": "소방팀",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "소방시설 설치 및 관리에 관한 법률",
+        "article": 12,
+        "clauseTextSummary": "고층 업무시설 소방시설 설치·관리 기준 — 스프링클러·피난설비 전층 의무",
+        "normalizedKey": "소방시설법/12"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "소방시설 설치 및 관리에 관한 법률 시행령",
+        "article": null,
+        "appendixRef": "별표4",
+        "clauseTextSummary": "업무시설 소방시설 설치 기준 (스프링클러, 비상방송, 피난유도등 등)",
+        "normalizedKey": "소방시설법시행령/별표4"
+      }
+    ],
+    "practicalNote": "고층 업무시설 소방서 협의는 크리티컬 패스. 층별 방화구획 + 스프링클러 헤드 계획은 건축·기계·소방 3개 분야 동시 협의. 소방펌프실 크기·위치가 지하 주차 면수에 영향.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-OFF-MEP-004", "version": "1.1", "isActive": true, "sortOrder": 40,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"], "layerType": "mep",
+    "title": "급배수설비: 급수·오수 계통 및 기계식 주차 연동", "teamTag": "위생팀",
+    "legalBasis": [
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 51,
+        "clauseTextSummary": "화장실·오수 정화시설 설치 기준",
+        "normalizedKey": "건축법시행령/51"
+      },
+      {
+        "referenceType": "enforcementRule",
+        "lawName": "건축물의 설비기준 등에 관한 규칙",
+        "article": 17,
+        "clauseTextSummary": "급배수·위생설비 설치 기준 — 업무시설 층별 급수 계통",
+        "normalizedKey": "건축물설비기준규칙/17"
+      }
+    ],
+    "practicalNote": "기계식 주차장 연동 집수정·오수 처리 위치는 토목·건축 협의 사항. 층별 화장실 위치·수량은 임차인 임대 계획과 연동. 고층 급수 방식(부스터 펌프) 결정 필요.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-OFF-MEP-005", "version": "1.1", "isActive": true, "sortOrder": 50,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"], "layerType": "mep",
+    "title": "에너지설비: 에너지절약계획서 및 친환경 인증 계획", "teamTag": "에너지팀",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "녹색건축물 조성 지원법",
+        "article": 14,
+        "clauseTextSummary": "건축물 에너지절약계획서 제출 대상 — 연면적 500㎡ 이상",
+        "normalizedKey": "녹색건축물법/14"
+      },
+      {
+        "referenceType": "notice",
+        "lawName": "건축물의 에너지절약 설계기준",
+        "article": null,
+        "appendixRef": "열관류율",
+        "clauseTextSummary": "업무시설 단열 기준 및 에너지절약계획서 작성 기준",
+        "normalizedKey": "건축물에너지설계기준/열관류율"
+      }
+    ],
+    "practicalNote": "G-SEED(녹색건축인증) 취득은 공공기여 인센티브·임대 마케팅과 연계. 에너지절약계획서 작성은 에너지팀 전문 용역 발주 필요. BEMS 도입 여부와 연동 검토.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  }
+]

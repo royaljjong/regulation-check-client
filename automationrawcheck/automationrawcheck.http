@@ -1,0 +1,6 @@
+@automationrawcheck_HostAddress = http://localhost:5017
+
+GET {{automationrawcheck_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

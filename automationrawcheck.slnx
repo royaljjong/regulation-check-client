@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="automationrawcheck.Tests/automationrawcheck.Tests.csproj" />
+  <Project Path="automationrawcheck/automationrawcheck.csproj" />
+</Solution>

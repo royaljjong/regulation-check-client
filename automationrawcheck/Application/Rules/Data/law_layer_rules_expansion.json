@@ -1,0 +1,446 @@
+[
+  {
+    "id": "LL-EDU-CORE-001",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 10,
+    "selectedUse": "교육시설",
+    "applicableUses": ["교육시설"],
+    "layerType": "core",
+    "law": "건축법 제49조 및 학교시설 관련 기준",
+    "scope": "교육시설 이용 여부, 피난, 방화의 핵심 법규를 검토합니다.",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 49,
+        "clauseTextSummary": "피난시설 설치 및 안전 확보 기준",
+        "normalizedKey": "건축법/49"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "학교용지 확보 등에 관한 특례법",
+        "article": 3,
+        "clauseTextSummary": "학교시설 확보의 기본 기준",
+        "normalizedKey": "학교용지확보특례법/3"
+      }
+    ],
+    "practicalNote": "교육시설은 건축법 검토만으로 닫히지 않는다. 학교급과 교육청 협의 전제를 함께 본다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-EDU-EXT-001",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 20,
+    "selectedUse": "교육시설",
+    "applicableUses": ["교육시설"],
+    "layerType": "extendedCore",
+    "law": "관련 조례 및 개별 운영 기준",
+    "scope": "학생수와 학교 운영 기준을 검토합니다.",
+    "legalBasis": [
+      {
+        "referenceType": "ordinance",
+        "lawName": "도시군계획조례",
+        "article": 1,
+        "clauseTextSummary": "학교시설 관련 지역별 추가 기준",
+        "normalizedKey": "도시군계획조례/1"
+      },
+      {
+        "referenceType": "guideline",
+        "lawName": "통학로 안전 관리 지침",
+        "appendixRef": "통학안전기준",
+        "clauseTextSummary": "통학 동선과 안전시설 기준",
+        "normalizedKey": "통학로안전관리지침/통학안전기준"
+      }
+    ],
+    "practicalNote": "extended core는 자동판정보다 협의 리스크 식별용이다. 통학안전과 지역 조례를 같이 검토한다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-MED-CORE-001",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 10,
+    "selectedUse": "의료시설",
+    "applicableUses": ["의료시설"],
+    "layerType": "core",
+    "law": "건축법 및 의료법",
+    "scope": "의료시설 이용 여부, 피난, 방화의 핵심 법규를 검토합니다.",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 49,
+        "clauseTextSummary": "피난시설 설치 및 안전 확보 기준",
+        "normalizedKey": "건축법/49"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "의료법",
+        "article": 36,
+        "clauseTextSummary": "의료기관 시설 기준",
+        "normalizedKey": "의료법/36"
+      }
+    ],
+    "practicalNote": "의료시설 core는 병상수와 층수에 크게 좌우된다. 의원과 병원을 분리해서 본다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-MED-EXT-001",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 20,
+    "selectedUse": "의료시설",
+    "applicableUses": ["의료시설"],
+    "layerType": "extendedCore",
+    "law": "관련 조례 및 개별 운영 기준",
+    "scope": "병상수와 특별 피난 기준을 검토합니다.",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "의료법",
+        "article": 36,
+        "clauseTextSummary": "의료기관 시설 기준과 안전성 확보",
+        "normalizedKey": "의료법/36"
+      },
+      {
+        "referenceType": "ordinance",
+        "lawName": "도시군계획조례",
+        "article": 1,
+        "clauseTextSummary": "지역별 의료시설 관련 추가 협의 기준",
+        "normalizedKey": "도시군계획조례/1"
+      }
+    ],
+    "practicalNote": "이 층위는 특별피난, 수동문, 병상배치 등 자동화 한계를 메우는 용도다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-MED-MEP-001",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 30,
+    "selectedUse": "의료시설",
+    "applicableUses": ["의료시설"],
+    "layerType": "mep",
+    "title": "의료시설 설비·전기·소방 협의",
+    "teamTag": "MEP",
+    "legalBasis": [
+      {
+        "referenceType": "guideline",
+        "lawName": "의료기관 시설기준 가이드라인",
+        "appendixRef": "설비기준",
+        "clauseTextSummary": "의료가스, 전기, 소방 설비 검토 기준",
+        "normalizedKey": "의료기관시설기준가이드라인/설비기준"
+      }
+    ],
+    "practicalNote": "MEP 협의는 의료가스, 비상전원, 소방 구획 연동까지 봐야 한다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-LOD-CORE-001",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 10,
+    "selectedUse": "숙박시설",
+    "applicableUses": ["숙박시설"],
+    "layerType": "core",
+    "law": "건축법 및 공중위생관리법",
+    "scope": "숙박시설 이용 여부, 피난, 방화의 핵심 법규를 검토합니다.",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 49,
+        "clauseTextSummary": "피난시설 설치 및 안전 확보 기준",
+        "normalizedKey": "건축법/49"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "공중위생관리법",
+        "article": 2,
+        "clauseTextSummary": "숙박업의 정의와 구분",
+        "normalizedKey": "공중위생관리법/2"
+      }
+    ],
+    "practicalNote": "생활숙박시설과 일반 숙박시설은 후속 법적 리스크가 달라 초기 분류가 중요하다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-LOD-EXT-001",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 20,
+    "selectedUse": "숙박시설",
+    "applicableUses": ["숙박시설"],
+    "layerType": "extendedCore",
+    "law": "관련 조례 및 개별 운영 기준",
+    "scope": "객실수와 피난 및 방화 기준을 검토합니다.",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 50,
+        "clauseTextSummary": "방화구조 및 방화구획 기준",
+        "normalizedKey": "건축법/50"
+      },
+      {
+        "referenceType": "ordinance",
+        "lawName": "도시군계획조례",
+        "article": 1,
+        "clauseTextSummary": "숙박시설 관련 지역별 운영 기준",
+        "normalizedKey": "도시군계획조례/1"
+      }
+    ],
+    "practicalNote": "객실수와 층수만으로는 부족하다. 복도형, 중복도형 여부를 함께 판단한다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-FAC-CORE-001",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 10,
+    "selectedUse": "공장",
+    "applicableUses": ["공장"],
+    "layerType": "core",
+    "law": "건축법 및 산업집적법",
+    "scope": "공장 이용 여부, 피난, 방화의 핵심 법규를 검토합니다.",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 76,
+        "clauseTextSummary": "용도지역별 건축물의 용도 제한 기준",
+        "normalizedKey": "국토계획법/76"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "산업집적활성화 및 공장설립에 관한 법률",
+        "article": 2,
+        "clauseTextSummary": "공장 정의와 설립 관련 기준",
+        "normalizedKey": "산업집적법/2"
+      }
+    ],
+    "practicalNote": "공장 core는 업종 분류가 선행이다. 업종코드 없이 상세 검토를 진행하지 않는다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-FAC-EXT-001",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 20,
+    "selectedUse": "공장",
+    "applicableUses": ["공장"],
+    "layerType": "extendedCore",
+    "law": "관련 조례 및 개별 운영 기준",
+    "scope": "업종, 위험물, 하역 동선 기준을 검토합니다.",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "위험물안전관리법",
+        "article": 5,
+        "clauseTextSummary": "위험물 저장 및 취급 기준",
+        "normalizedKey": "위험물안전관리법/5"
+      },
+      {
+        "referenceType": "ordinance",
+        "lawName": "도시군계획조례",
+        "article": 1,
+        "clauseTextSummary": "하역 및 차량 동선 관련 지역 운영 기준",
+        "normalizedKey": "도시군계획조례/1"
+      }
+    ],
+    "practicalNote": "extended core는 위험물과 물류 운영의 경계가 있는 공장에서 특히 중요하다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-FAC-MEP-001",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 30,
+    "selectedUse": "공장",
+    "applicableUses": ["공장"],
+    "layerType": "mep",
+    "title": "공장 설비·전기·소방 협의",
+    "teamTag": "MEP",
+    "legalBasis": [
+      {
+        "referenceType": "guideline",
+        "lawName": "공장설비 운영 가이드라인",
+        "appendixRef": "설비기준",
+        "clauseTextSummary": "공장 설비 및 비상전원, 소방 협의 기준",
+        "normalizedKey": "공장설비운영가이드라인/설비기준"
+      }
+    ],
+    "practicalNote": "전력용량, 배기, 집진, 소방 연동이 동시에 걸리는 경우가 많아 MEP 협의 비중이 높다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-WHS-CORE-001",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 10,
+    "selectedUse": "창고시설",
+    "applicableUses": ["창고시설"],
+    "layerType": "core",
+    "law": "건축법 및 주차장법",
+    "scope": "창고시설 이용 여부, 피난, 방화의 핵심 법규를 검토합니다.",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 49,
+        "clauseTextSummary": "피난시설 및 안전 확보 기준",
+        "normalizedKey": "건축법/49"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "주차장법",
+        "article": 19,
+        "clauseTextSummary": "부설주차장 설치 의무와 기준",
+        "normalizedKey": "주차장법/19"
+      }
+    ],
+    "practicalNote": "창고시설 core는 이용용도와 대공간 안전성 두 축으로 본다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-WHS-EXT-001",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 20,
+    "selectedUse": "창고시설",
+    "applicableUses": ["창고시설"],
+    "layerType": "extendedCore",
+    "law": "관련 조례 및 개별 운영 기준",
+    "scope": "대공간 시설의 상하차 및 방화 기준을 검토합니다.",
+    "legalBasis": [
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 46,
+        "clauseTextSummary": "방화구획 설치 기준",
+        "normalizedKey": "건축법시행령/46"
+      },
+      {
+        "referenceType": "ordinance",
+        "lawName": "도시군계획조례",
+        "article": 1,
+        "clauseTextSummary": "상하차 공간과 운영 동선의 지역 기준",
+        "normalizedKey": "도시군계획조례/1"
+      }
+    ],
+    "practicalNote": "상하차 운영은 법정 주차보다 민원 영향이 큰 경우가 많다. 대기차 공간을 같이 본다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-LOG-CORE-001",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 10,
+    "selectedUse": "물류시설",
+    "applicableUses": ["물류시설"],
+    "layerType": "core",
+    "law": "건축법, 주차장법 및 조례",
+    "scope": "물류시설 이용 여부, 피난, 방화의 핵심 법규를 검토합니다.",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 49,
+        "clauseTextSummary": "피난시설 설치 및 안전 확보 기준",
+        "normalizedKey": "건축법/49"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "주차장법",
+        "article": 19,
+        "clauseTextSummary": "부설주차장 설치 의무와 기준",
+        "normalizedKey": "주차장법/19"
+      }
+    ],
+    "practicalNote": "물류시설 core는 주차보다 차량동선과 대기차 처리가 더 중요한 경우가 많다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-LOG-EXT-001",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 20,
+    "selectedUse": "물류시설",
+    "applicableUses": ["물류시설"],
+    "layerType": "extendedCore",
+    "law": "관련 조례 및 개별 운영 기준",
+    "scope": "물류 동선과 교통영향 기준을 검토합니다.",
+    "legalBasis": [
+      {
+        "referenceType": "ordinance",
+        "lawName": "도시군계획조례",
+        "article": 1,
+        "clauseTextSummary": "대형 물류시설에 대한 지역별 운영 기준",
+        "normalizedKey": "도시군계획조례/1"
+      },
+      {
+        "referenceType": "guideline",
+        "lawName": "개발행위허가 운영지침",
+        "appendixRef": "물류시설협의기준",
+        "clauseTextSummary": "물류시설 개발행위허가 협의 기준",
+        "normalizedKey": "개발행위허가운영지침/물류시설협의기준"
+      }
+    ],
+    "practicalNote": "교통영향과 개발행위허가가 결합되면 일정 리스크가 커진다. 조례와 지침을 동시에 체크한다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "LL-LOG-MEP-001",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 30,
+    "selectedUse": "물류시설",
+    "applicableUses": ["물류시설"],
+    "layerType": "mep",
+    "title": "물류시설 설비·전기·소방 협의",
+    "teamTag": "MEP",
+    "legalBasis": [
+      {
+        "referenceType": "guideline",
+        "lawName": "물류시설 설비 운영 가이드라인",
+        "appendixRef": "설비기준",
+        "clauseTextSummary": "대공간 물류시설 설비 및 소방 협의 기준",
+        "normalizedKey": "물류시설설비운영가이드라인/설비기준"
+      }
+    ],
+    "practicalNote": "스프링클러, 제연, 전력계획을 한 묶음으로 봐야 한다. 창고형과 물류센터형을 구분한다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  }
+]

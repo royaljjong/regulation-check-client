@@ -1,0 +1,42 @@
+﻿.vercel
+.sixth/
+artifacts/
+
+# SHP spatial data served separately over ngrok
+data/shp/
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.qpj
+*.sbn
+*.sbx
+
+# local bulk data and exports
+accept data/
+city plan data/
+development data/
+data/csv/
+*.zip
+*.7z
+
+# .NET build outputs
+**/bin/
+**/obj/
+*.csproj.user
+
+# Node.js
+node_modules/
+dist/
+client/
+
+# Visual Studio
+.vs/
+
+# local agent settings
+.claude/
+
+# local env files
+*.env
+*.env.*

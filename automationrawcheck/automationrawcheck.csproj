@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <ContainerRuntimeIdentifier>win-x64</ContainerRuntimeIdentifier>
+    <EnableSdkContainerDebugging>True</EnableSdkContainerDebugging>
+    <ContainerBaseImage>mcr.microsoft.com/dotnet/aspnet:8.0-nanoserver-1809</ContainerBaseImage>
+    <UserSecretsId>7b8c05cb-ca21-46dc-b9bd-3e9cc9576d3f</UserSecretsId>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Swagger UI -->
+    <PackageReference Include="ProjNET4GeoAPI" Version="1.4.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+
+    <!-- Serilog -->
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
+
+    <!-- NTS (NetTopologySuite) - 공간 연산 -->
+    <PackageReference Include="NetTopologySuite" Version="2.5.0" />
+
+    <!-- NTS Shapefile Reader -->
+    <PackageReference Include="NetTopologySuite.IO.ShapeFile" Version="2.1.0" />
+
+    <!-- CSV Helper -->
+    <PackageReference Include="CsvHelper" Version="33.0.1" />
+
+    <!-- Memory Cache -->
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
+
+    <!-- FluentValidation - 입력 DTO 유효성 검사 -->
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
+
+    <!-- Swagger Annotations - 예시 값, 스키마 메타데이터 -->
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ContainerPort Include="8081" />
+  </ItemGroup>
+
+  <!-- 규칙 데이터 사전 JSON — 임베딩 리소스로 패키징 -->
+  <ItemGroup>
+    <EmbeddedResource Include="Application\Rules\Data\*.json" />
+  </ItemGroup>
+
+</Project>

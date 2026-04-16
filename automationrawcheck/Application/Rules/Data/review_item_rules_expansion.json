@@ -1,0 +1,652 @@
+[
+  {
+    "id": "RI-EDU-001",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 10,
+    "selectedUse": "교육시설",
+    "applicableUses": ["교육시설"],
+    "applicableZones": ["*"],
+    "category": "이용용도",
+    "title": "교육시설 이용 여부 및 학교군 확인",
+    "description": "교육시설은 용도지역 허용 여부뿐 아니라 학교급과 통학 동선, 부속시설 계획까지 함께 확인해야 합니다.",
+    "requiredInputs": ["studentCount", "occupantCount"],
+    "relatedLaws": ["국토계획법 제76조", "학교용지 확보 등에 관한 특례법"],
+    "isAutoCheckable": false,
+    "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 76,
+        "clauseTextSummary": "용도지역별 건축물의 용도 제한 기준",
+        "normalizedKey": "국토계획법/76"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "학교용지 확보 등에 관한 특례법",
+        "article": 3,
+        "clauseTextSummary": "학교용지와 학교시설 확보의 기본 기준",
+        "normalizedKey": "학교용지확보특례법/3"
+      }
+    ],
+    "practicalNote": "학교급이 명확하지 않으면 허용용도와 협의 대상 기관이 달라진다. 교육청 협의 가능성을 초기에 열어둔다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-EDU-002",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 20,
+    "selectedUse": "교육시설",
+    "applicableUses": ["교육시설"],
+    "applicableZones": ["*"],
+    "category": "피난/계단",
+    "title": "학생수 기준 피난 계획 확인",
+    "description": "학생수와 층수에 따라 피난계단, 복도, 직접 공간 계획을 먼저 검토해야 합니다.",
+    "requiredInputs": ["floorCount", "studentCount", "occupantCount"],
+    "relatedLaws": ["건축법 제49조", "건축법 시행령 제34조"],
+    "isAutoCheckable": false,
+    "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 49,
+        "clauseTextSummary": "피난시설 및 용도별 안전 확보의 기본 기준",
+        "normalizedKey": "건축법/49"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 34,
+        "clauseTextSummary": "직통계단 설치 기준",
+        "normalizedKey": "건축법시행령/34"
+      }
+    ],
+    "practicalNote": "학생수 산정 방식이 흔들리면 계단 수와 복도 폭 계획이 모두 달라진다. 표준반 수용인원 가정을 기록한다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-EDU-003",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 30,
+    "selectedUse": "교육시설",
+    "applicableUses": ["교육시설"],
+    "applicableZones": ["*"],
+    "category": "지구단위계획",
+    "title": "학교시설 조례 및 통학안전 협의 확인",
+    "description": "관할 교육지원청, 통학로 조례 기준은 동시에 작동하는 항목이 있어 수동 검토가 필요합니다.",
+    "requiredInputs": ["educationSpecialCriteria"],
+    "relatedLaws": ["도시군계획조례", "통학로 안전 기준"],
+    "isAutoCheckable": false,
+    "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "ordinance",
+        "lawName": "도시군계획조례",
+        "article": 1,
+        "clauseTextSummary": "학교시설에 대한 지역별 추가 기준 확인 필요",
+        "normalizedKey": "도시군계획조례/1"
+      },
+      {
+        "referenceType": "guideline",
+        "lawName": "통학로 안전 관리 지침",
+        "appendixRef": "통학안전기준",
+        "clauseTextSummary": "통학 동선과 차량 동선 분리 기준",
+        "normalizedKey": "통학로안전관리지침/통학안전기준"
+      }
+    ],
+    "practicalNote": "통학안전은 자동판정보다 현장 도면과 행정협의가 중요하다. 교육청, 경찰서 협의 가능성을 메모한다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-MED-001",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 10,
+    "selectedUse": "의료시설",
+    "applicableUses": ["의료시설"],
+    "applicableZones": ["*"],
+    "category": "이용용도",
+    "title": "의료시설 이용 여부 및 세부 유형 확인",
+    "description": "의원, 병원, 요양병원 등 세부 유형에 따라 이용 여부와 상위법 검토 범위가 달라집니다.",
+    "requiredInputs": ["bedCount", "medicalSpecialCriteria"],
+    "relatedLaws": ["국토계획법 제76조", "의료법"],
+    "isAutoCheckable": false,
+    "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 76,
+        "clauseTextSummary": "용도지역별 건축물의 용도 제한 기준",
+        "normalizedKey": "국토계획법/76"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "의료법",
+        "article": 3,
+        "clauseTextSummary": "의료기관의 종류와 구분",
+        "normalizedKey": "의료법/3"
+      }
+    ],
+    "practicalNote": "병원, 요양병원, 의원은 건축 협의 수준이 다르다. 개설신고 또는 허가 단계와 연결해서 본다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-MED-002",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 20,
+    "selectedUse": "의료시설",
+    "applicableUses": ["의료시설"],
+    "applicableZones": ["*"],
+    "category": "피난/계단",
+    "title": "병상수 기준 특별피난 검토",
+    "description": "병상수와 층수에 따라 일반 업무시설보다 강화된 피난 검토가 필요합니다.",
+    "requiredInputs": ["bedCount", "floorCount", "occupantCount"],
+    "relatedLaws": ["건축법 제49조", "의료법"],
+    "isAutoCheckable": false,
+    "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 49,
+        "clauseTextSummary": "피난시설 및 안전 확보의 기본 기준",
+        "normalizedKey": "건축법/49"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "의료법",
+        "article": 36,
+        "clauseTextSummary": "의료기관 시설 기준과 안전성 확보",
+        "normalizedKey": "의료법/36"
+      }
+    ],
+    "practicalNote": "병상수는 피난계획의 핵심 입력이다. 외래 중심 시설인지 입원 중심 시설인지도 함께 기록한다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-MED-003",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 30,
+    "selectedUse": "의료시설",
+    "applicableUses": ["의료시설"],
+    "applicableZones": ["*"],
+    "category": "방화",
+    "title": "의료시설 방화구획 및 감염관리 동선 확인",
+    "description": "방화구획과 청정, 오염 동선은 함께 검토되어야 하므로 수동 검토를 병행합니다.",
+    "requiredInputs": ["floorArea", "medicalSpecialCriteria"],
+    "relatedLaws": ["건축법 제50조", "의료법"],
+    "isAutoCheckable": false,
+    "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 50,
+        "clauseTextSummary": "방화구조 및 방화구획 기준",
+        "normalizedKey": "건축법/50"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "의료법",
+        "article": 36,
+        "clauseTextSummary": "의료기관 시설기준과 내부 동선 관리",
+        "normalizedKey": "의료법/36"
+      }
+    ],
+    "practicalNote": "감염관리 동선은 자동화하기 어렵다. 평면도 기반 수동검토를 항상 병행한다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-LOD-001",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 10,
+    "selectedUse": "숙박시설",
+    "applicableUses": ["숙박시설"],
+    "applicableZones": ["*"],
+    "category": "이용용도",
+    "title": "숙박시설 이용 여부 및 세부 운영 유형 확인",
+    "description": "관광숙박, 일반숙박, 생활숙박 등 운영 유형에 따라 이용성과 조례 검토 축이 달라집니다.",
+    "requiredInputs": ["guestRoomCount", "accommodationSpecialCriteria"],
+    "relatedLaws": ["국토계획법 제76조", "공중위생관리법"],
+    "isAutoCheckable": false,
+    "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 76,
+        "clauseTextSummary": "용도지역별 건축물의 용도 제한 기준",
+        "normalizedKey": "국토계획법/76"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "공중위생관리법",
+        "article": 2,
+        "clauseTextSummary": "숙박업의 정의와 구분",
+        "normalizedKey": "공중위생관리법/2"
+      }
+    ],
+    "practicalNote": "생활숙박시설과 일반 숙박시설은 운영상 리스크가 크게 다르다. 분양형 운영 여부를 별도 메모한다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-LOD-002",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 20,
+    "selectedUse": "숙박시설",
+    "applicableUses": ["숙박시설"],
+    "applicableZones": ["*"],
+    "category": "피난/계단",
+    "title": "객실수 기준 피난 계획 확인",
+    "description": "객실수와 층수 조합에 따라 피난, 복도, 계단 계획 리스크가 커집니다.",
+    "requiredInputs": ["guestRoomCount", "floorCount", "occupantCount"],
+    "relatedLaws": ["건축법 제49조"],
+    "isAutoCheckable": false,
+    "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 49,
+        "clauseTextSummary": "피난시설 설치의 기본 기준",
+        "normalizedKey": "건축법/49"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 34,
+        "clauseTextSummary": "직통계단 설치 기준",
+        "normalizedKey": "건축법시행령/34"
+      }
+    ],
+    "practicalNote": "객실수 산정은 통상 최대 투숙인원과 함께 검토한다. 피난거리와 복도 폭 리스크를 같이 본다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-LOD-003",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 30,
+    "selectedUse": "숙박시설",
+    "applicableUses": ["숙박시설"],
+    "applicableZones": ["*"],
+    "category": "방화",
+    "title": "객실형 방화구획 기준 확인",
+    "description": "객실형 평면은 방화구획과 내장 마감재 기준을 별도로 검토해야 합니다.",
+    "requiredInputs": ["guestRoomCount", "floorArea"],
+    "relatedLaws": ["건축법 제50조", "건축법 제52조"],
+    "isAutoCheckable": false,
+    "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 50,
+        "clauseTextSummary": "방화구조 및 방화구획 기준",
+        "normalizedKey": "건축법/50"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 52,
+        "clauseTextSummary": "내장재 및 마감재 기준",
+        "normalizedKey": "건축법/52"
+      }
+    ],
+    "practicalNote": "객실형 평면은 복도형보다 마감재와 구획 계획 영향이 크다. 평면 유형을 같이 기록한다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-FAC-001",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 10,
+    "selectedUse": "공장",
+    "applicableUses": ["공장"],
+    "applicableZones": ["*"],
+    "category": "이용용도",
+    "title": "공장 이용 여부 및 업종 분류 확인",
+    "description": "공업지역 여부와 업종 분류, 위험물 취급 여부를 함께 봐야 합니다.",
+    "requiredInputs": ["hazardousMaterialProfile"],
+    "relatedLaws": ["국토계획법 제76조", "산업집적법"],
+    "isAutoCheckable": false,
+    "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 76,
+        "clauseTextSummary": "용도지역별 건축물의 용도 제한 기준",
+        "normalizedKey": "국토계획법/76"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "산업집적활성화 및 공장설립에 관한 법률",
+        "article": 2,
+        "clauseTextSummary": "공장과 업종 분류의 기본 정의",
+        "normalizedKey": "산업집적법/2"
+      }
+    ],
+    "practicalNote": "공장 여부는 업종 코드와 생산 공정 설명에 크게 좌우된다. 공정 설명서를 별첨 대상으로 본다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-FAC-002",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 20,
+    "selectedUse": "공장",
+    "applicableUses": ["공장"],
+    "applicableZones": ["*"],
+    "category": "접도/건축선",
+    "title": "공장 차량 진출입 및 하역 동선 확인",
+    "description": "공장 출입차량과 하역 동선은 접도 조건과 함께 인허가 리스크를 만듭니다.",
+    "requiredInputs": ["vehicleIngressType", "floorArea"],
+    "relatedLaws": ["건축법 제44조"],
+    "isAutoCheckable": false,
+    "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 44,
+        "clauseTextSummary": "대지와 도로의 관계 및 접도 요건",
+        "normalizedKey": "건축법/44"
+      },
+      {
+        "referenceType": "ordinance",
+        "lawName": "도시군계획조례",
+        "article": 1,
+        "clauseTextSummary": "차량 진출입 및 하역장 배치에 대한 지역별 운영 기준",
+        "normalizedKey": "도시군계획조례/1"
+      }
+    ],
+    "practicalNote": "하역 동선은 접도만으로 끝나지 않는다. 대기차 공간과 회차 가능 여부를 함께 기록한다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-FAC-003",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 30,
+    "selectedUse": "공장",
+    "applicableUses": ["공장"],
+    "applicableZones": ["*"],
+    "category": "방화",
+    "title": "위험물 및 화재 확산 리스크 확인",
+    "description": "위험물 취급 여부와 대공간 면적을 기준으로 방화와 피난 검토를 강화합니다.",
+    "requiredInputs": ["hazardousMaterialProfile", "floorArea"],
+    "relatedLaws": ["건축법 제50조", "위험물안전관리법"],
+    "isAutoCheckable": false,
+    "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 50,
+        "clauseTextSummary": "방화구조 및 방화구획 기준",
+        "normalizedKey": "건축법/50"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "위험물안전관리법",
+        "article": 5,
+        "clauseTextSummary": "위험물 저장 및 취급 기준",
+        "normalizedKey": "위험물안전관리법/5"
+      }
+    ],
+    "practicalNote": "위험물 프로필이 비어 있으면 자동판정 가치가 급격히 떨어진다. 저장량 추정치를 반드시 기록한다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-WHS-001",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 10,
+    "selectedUse": "창고시설",
+    "applicableUses": ["창고시설"],
+    "applicableZones": ["*"],
+    "category": "이용용도",
+    "title": "창고시설 이용 여부 및 저장 유형 확인",
+    "description": "창고시설은 이용 여부와 저장 품목 성격을 함께 검토해야 합니다.",
+    "requiredInputs": ["roomCount", "logisticsOperationProfile"],
+    "relatedLaws": ["국토계획법 제76조"],
+    "isAutoCheckable": false,
+    "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 76,
+        "clauseTextSummary": "용도지역별 건축물의 용도 제한 기준",
+        "normalizedKey": "국토계획법/76"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "appendixRef": "별표1",
+        "subParagraph": "18",
+        "clauseTextSummary": "창고시설의 건축물 용도 분류",
+        "normalizedKey": "건축법/별표1/18"
+      }
+    ],
+    "practicalNote": "저장 품목이 위험물인지 일반 물류인지에 따라 후속 방화 검토 깊이가 달라진다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-WHS-002",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 20,
+    "selectedUse": "창고시설",
+    "applicableUses": ["창고시설"],
+    "applicableZones": ["*"],
+    "category": "주차",
+    "title": "상하차 공간 및 주차 기준 확인",
+    "description": "일반 주차 대수뿐 아니라 상하차 공간과 대형차 동선을 함께 확인합니다.",
+    "requiredInputs": ["vehicleIngressType", "floorArea"],
+    "relatedLaws": ["주차장법"],
+    "isAutoCheckable": false,
+    "priority": "medium",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "주차장법",
+        "article": 19,
+        "clauseTextSummary": "부설주차장 설치 의무와 기준",
+        "normalizedKey": "주차장법/19"
+      },
+      {
+        "referenceType": "ordinance",
+        "lawName": "주차장 설치 조례",
+        "article": 1,
+        "clauseTextSummary": "상하차 공간과 대형차 동선에 대한 지역 기준",
+        "normalizedKey": "주차장설치조례/1"
+      }
+    ],
+    "practicalNote": "창고시설은 법정 주차대수보다 상하차 운영 동선이 더 큰 리스크가 될 수 있다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-WHS-003",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 30,
+    "selectedUse": "창고시설",
+    "applicableUses": ["창고시설"],
+    "applicableZones": ["*"],
+    "category": "방화",
+    "title": "대공간 창고 방화구획 확인",
+    "description": "대공간 창고는 면적 기준에 따라 방화구획과 내화 검토를 강화해야 합니다.",
+    "requiredInputs": ["floorArea", "logisticsOperationProfile"],
+    "relatedLaws": ["건축법 제50조"],
+    "isAutoCheckable": false,
+    "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 50,
+        "clauseTextSummary": "방화구조 및 방화구획 기준",
+        "normalizedKey": "건축법/50"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 46,
+        "clauseTextSummary": "방화구획 설치 기준",
+        "normalizedKey": "건축법시행령/46"
+      }
+    ],
+    "practicalNote": "랙 창고인지 평치창고인지에 따라 유효 저장높이와 방화 검토 포인트가 달라진다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-LOG-001",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 10,
+    "selectedUse": "물류시설",
+    "applicableUses": ["물류시설"],
+    "applicableZones": ["*"],
+    "category": "이용용도",
+    "title": "물류시설 이용 여부 및 운영 프로필 확인",
+    "description": "물류시설은 대형차 운영, 하역장 계획, 처리 물동량 특성을 함께 봐야 합니다.",
+    "requiredInputs": ["vehicleIngressType", "logisticsOperationProfile"],
+    "relatedLaws": ["국토계획법 제76조"],
+    "isAutoCheckable": false,
+    "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 76,
+        "clauseTextSummary": "용도지역별 건축물의 용도 제한 기준",
+        "normalizedKey": "국토계획법/76"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "appendixRef": "별표1",
+        "subParagraph": "18",
+        "clauseTextSummary": "창고 및 물류 관련 용도 분류 참고",
+        "normalizedKey": "건축법/별표1/18"
+      }
+    ],
+    "practicalNote": "물동량과 대형차 회전율이 빠지면 실제 협의 리스크를 설명하지 못한다. 운영 프로필을 정성 입력으로라도 받는다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-LOG-002",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 20,
+    "selectedUse": "물류시설",
+    "applicableUses": ["물류시설"],
+    "applicableZones": ["*"],
+    "category": "주차",
+    "title": "물류 차량 동선 및 주차 계획 확인",
+    "description": "적재차와 대기차 분리 동선은 일반 건축물보다 중요합니다.",
+    "requiredInputs": ["vehicleIngressType", "floorArea", "occupantCount"],
+    "relatedLaws": ["주차장법"],
+    "isAutoCheckable": false,
+    "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "주차장법",
+        "article": 19,
+        "clauseTextSummary": "부설주차장 설치 의무와 기준",
+        "normalizedKey": "주차장법/19"
+      },
+      {
+        "referenceType": "guideline",
+        "lawName": "물류단지 개발 및 운영 가이드라인",
+        "appendixRef": "차량동선기준",
+        "clauseTextSummary": "대형차 동선과 대기차 공간 운영 기준",
+        "normalizedKey": "물류단지운영가이드라인/차량동선기준"
+      }
+    ],
+    "practicalNote": "법정 주차대수보다 대기차 적체가 실제 민원 포인트다. 회차 반경과 도로 접속부를 함께 본다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-LOG-003",
+    "version": "1.1",
+    "isActive": true,
+    "sortOrder": 30,
+    "selectedUse": "물류시설",
+    "applicableUses": ["물류시설"],
+    "applicableZones": ["*"],
+    "category": "지구단위계획",
+    "title": "교통영향 및 조례 협의 항목 확인",
+    "description": "대형 물류시설은 조례, 교통영향, 개발행위허가 검토 비중이 높습니다.",
+    "requiredInputs": ["logisticsOperationProfile"],
+    "relatedLaws": ["도시군계획조례", "개발행위허가"],
+    "isAutoCheckable": false,
+    "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "ordinance",
+        "lawName": "도시군계획조례",
+        "article": 1,
+        "clauseTextSummary": "대형 물류시설에 대한 지역별 협의 기준",
+        "normalizedKey": "도시군계획조례/1"
+      },
+      {
+        "referenceType": "guideline",
+        "lawName": "개발행위허가 운영지침",
+        "appendixRef": "물류시설협의기준",
+        "clauseTextSummary": "개발행위허가와 교통영향 협의의 실무 기준",
+        "normalizedKey": "개발행위허가운영지침/물류시설협의기준"
+      }
+    ],
+    "practicalNote": "이 항목은 자동 판정보다 행정협의 범위 확인용이다. 교통영향평가 또는 사전검토 여부를 별도 기록한다.",
+    "source": "rule",
+    "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  }
+]

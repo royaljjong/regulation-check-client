@@ -1,0 +1,1012 @@
+[
+  // ==========================================================================
+  // review_item_rules.json — 건축 검토 항목 규칙 데이터 사전
+  //
+  // [필드 안내]
+  //   id             : 고유 ID (RI-{USE}-{SEQ}, 오버레이: RI-OVL-{TYPE}-{SEQ})
+  //   version        : 규칙 버전
+  //   isActive       : false이면 런타임 제외
+  //   sortOrder      : 용도 그룹 내 표시 순서 (오름차순)
+  //   selectedUse    : 단일 적용 용도 ("*" = 전체 공통)
+  //   applicableUses : 복수 용도 목록
+  //   applicableZones: 적용 대상 용도지역 (["*"] = 전체, 현재 필터링 미구현)
+  //   category       : 검토 항목 분류 [표시용]
+  //   title          : 행동형 항목명 [표시용]
+  //   description    : 리스크/사업성 영향 설명 [표시용]
+  //   requiredInputs : 판정 필요 추가 입력값 [판정 조건]
+  //   relatedLaws    : 관련 법령 참고 [표시용]
+  //   isAutoCheckable: 공간 데이터 자동 판정 여부 [판정 조건]
+  //   priority       : high|medium|low [판정 조건]
+  //   legalBasis     : 조문 단위 법규 근거 (관리용)
+  //   practicalNote  : 실무 유의사항 (관리자용, UI 미표시)
+  //   source         : 항상 "rule"
+  //   confidence     : 항상 "low"
+  //   trigger        : 포함 조건
+  // ==========================================================================
+
+  // ── 공동주택 기본 항목 (6개) ─────────────────────────────────────────────
+  {
+    "id": "RI-APT-001", "version": "1.1", "isActive": true, "sortOrder": 10,
+    "selectedUse": "공동주택", "applicableUses": ["공동주택"],
+    "applicableZones": ["*"],
+    "category": "허용용도",
+    "title": "공동주택 허용 용도 및 세부 유형 확인",
+    "description": "제1종전용주거지역은 단독주택만 허용되어 공동주택 자체가 불가합니다. 아파트는 제2종전용주거지역 이상에서만 건축 가능하므로, 용도지역 판정이 잘못되면 사업 전체가 불가합니다. 아파트·연립·다세대 중 어떤 유형으로 신청할지 먼저 결정하세요.",
+    "requiredInputs": ["계획 공동주택 유형(아파트/연립/다세대)", "판정 용도지역"],
+    "relatedLaws": ["국토계획법 제76조", "건축법 별표 1 제2호"],
+    "isAutoCheckable": false, "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 76,
+        "clauseTextSummary": "용도지역별 건축물 용도 제한 (공동주택 허용 여부 기준)",
+        "normalizedKey": "국토계획법/76"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "국토의 계획 및 이용에 관한 법률 시행령",
+        "appendixRef": "별표4",
+        "clauseTextSummary": "제2종전용주거지역 내 건축 가능 건축물 목록 (공동주택 포함)",
+        "normalizedKey": "국토계획법시행령/별표4"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "appendixRef": "별표1",
+        "subParagraph": "2",
+        "clauseTextSummary": "건축물 종류 분류 — 제2호 공동주택 (아파트·연립·다세대)",
+        "normalizedKey": "건축법/별표1/2"
+      }
+    ],
+    "practicalNote": "제1종전용주거지역에서 아파트 허가 신청 시 즉시 반려됨. 용도지역 확인이 사업 검토의 첫 번째 단계. GIS 판정 결과와 건축 담당 확인을 교차 검증 권장.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-APT-002", "version": "1.1", "isActive": true, "sortOrder": 20,
+    "selectedUse": "공동주택", "applicableUses": ["공동주택"],
+    "applicableZones": ["*"],
+    "category": "밀도",
+    "title": "건폐율·용적률 상한 및 인센티브 확인",
+    "description": "조례 기준 용적률은 법정 상한보다 낮게 설정되는 경우가 많습니다. 계획 용적률이 조례 상한을 초과하면 층수·세대수를 줄여야 하며 사업성에 직결됩니다. 공공기여·임대주택 혼합 등 인센티브 조건도 함께 확인하세요.",
+    "requiredInputs": ["계획 층수", "계획 세대수", "계획 연면적", "판정 용도지역"],
+    "relatedLaws": ["국토계획법 제77조·제78조", "해당 시·군·구 도시계획 조례"],
+    "isAutoCheckable": false, "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 77,
+        "clauseTextSummary": "용도지역별 건폐율 상한 (법정 상한, 조례로 하향 가능)",
+        "normalizedKey": "국토계획법/77"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 78,
+        "clauseTextSummary": "용도지역별 용적률 상한 (법정 상한, 조례로 하향 가능)",
+        "normalizedKey": "국토계획법/78"
+      },
+      {
+        "referenceType": "ordinance",
+        "lawName": "해당 시·군·구 도시계획 조례",
+        "article": 1,
+        "clauseTextSummary": "조례 실적용 건폐율·용적률 — 법정 상한 이하로 별도 설정",
+        "normalizedKey": "도시계획조례/건폐율용적률"
+      }
+    ],
+    "practicalNote": "조례 용적률은 법정 상한의 50~80% 수준인 지자체가 다수. 사업성 분석은 반드시 조례 기준값으로 계산. 공공기여 용적률 인센티브(임대주택 혼합 등) 조건도 지자체별 상이.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-APT-003", "version": "1.1", "isActive": true, "sortOrder": 30,
+    "selectedUse": "공동주택", "applicableUses": ["공동주택"],
+    "applicableZones": ["*"],
+    "category": "도로/건축선",
+    "title": "도로 접면 요건 및 건축선 후퇴 확인",
+    "description": "공동주택 건축을 위한 최소 접도 폭(통상 4m 이상, 세대수에 따라 상이)을 충족하지 못하면 허가 자체가 불가합니다. 지구단위계획 또는 지자체 조례에 의한 건축선 후퇴 기준이 있으면 실 건축 가능 면적이 줄어들어 사업성에 영향을 줄 수 있습니다.",
+    "requiredInputs": ["대지 접면 도로 폭", "계획 세대수", "건축선 지정 여부"],
+    "relatedLaws": ["건축법 제44조·제46조", "해당 시·군·구 건축 조례"],
+    "isAutoCheckable": false, "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 44,
+        "clauseTextSummary": "건축물 대지의 도로 접면 요건 (4m 이상 도로에 2m 이상 접함)",
+        "normalizedKey": "건축법/44"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 46,
+        "clauseTextSummary": "건축선 지정 및 후퇴 기준 (도로·지구단위계획 지정 가능)",
+        "normalizedKey": "건축법/46"
+      }
+    ],
+    "practicalNote": "소규모 필지 합필 시 도로 접면 재확인 필요. 건축선 후퇴가 있으면 실 건축 가능 면적 감소 → 사업성 분석 재계산 필요. 지구단위계획 구역에서는 개별 지침 건축선 우선 적용.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-APT-004", "version": "1.1", "isActive": true, "sortOrder": 40,
+    "selectedUse": "공동주택", "applicableUses": ["공동주택"],
+    "applicableZones": ["*"],
+    "category": "주차",
+    "title": "세대수 기준 주차대수 산정",
+    "description": "세대당 주차대수 기준을 충족하지 못하면 세대수를 줄이거나 지하주차장을 확장해야 하므로 공사비가 크게 증가합니다. 용도지역(주거전용·준주거)에 따라 기준이 다르며, 지하주차장 설치 여부가 산정 방식에도 영향을 줍니다.",
+    "requiredInputs": ["계획 세대수", "세대별 전용면적", "지하주차장 설치 여부"],
+    "relatedLaws": ["주차장법 제19조", "해당 시·군·구 주차장 조례"],
+    "isAutoCheckable": false, "priority": "medium",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "주차장법",
+        "article": 19,
+        "clauseTextSummary": "부설주차장 설치 의무 및 설치 기준",
+        "normalizedKey": "주차장법/19"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "주차장법 시행령",
+        "appendixRef": "별표1",
+        "clauseTextSummary": "부설주차장 설치 기준 — 공동주택 세대당·전용면적별 주차대수",
+        "normalizedKey": "주차장법시행령/별표1"
+      },
+      {
+        "referenceType": "ordinance",
+        "lawName": "해당 시·군·구 주차장 설치 조례",
+        "article": 1,
+        "clauseTextSummary": "지자체 강화 기준 적용 여부 — 관할 지자체 조례 개별 확인 필수",
+        "normalizedKey": "주차장조례/지역별기준"
+      }
+    ],
+    "practicalNote": "지하주차장 1개 층 추가 시 공사비 약 3~5억 원 상승(규모 의존). 주차대수 산정 방식(면적 기준 vs 세대수 기준)이 지역별로 다르므로 관할 지자체 사전 확인 필수.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-APT-005", "version": "1.1", "isActive": true, "sortOrder": 50,
+    "selectedUse": "공동주택", "applicableUses": ["공동주택"],
+    "applicableZones": ["*"],
+    "category": "피난/계단",
+    "title": "직통계단·피난계단 설치 요건 확인",
+    "description": "5층 이상은 직통계단 2개소가 필수이며, 6층 이상 아파트·11층 이상 건물은 피난계단 또는 특별피난계단이 필요합니다. 계단 코어 위치와 면적이 평면 계획을 결정하므로 초기 단계에 확정해야 합니다.",
+    "requiredInputs": ["계획 층수", "각 층 바닥면적"],
+    "relatedLaws": ["건축법 제49조", "건축법 시행령 제34조~제36조"],
+    "isAutoCheckable": false, "priority": "medium",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 49,
+        "clauseTextSummary": "피난시설 설치 의무",
+        "normalizedKey": "건축법/49"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 34,
+        "clauseTextSummary": "직통계단 설치 기준 (각층에서 피난층까지 1개소 이상, 5층 이상 2개소)",
+        "normalizedKey": "건축법시행령/34"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 35,
+        "clauseTextSummary": "피난계단 설치 기준 (5층 이상, 지하 2층 이하)",
+        "normalizedKey": "건축법시행령/35"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 36,
+        "clauseTextSummary": "특별피난계단 설치 기준 (11층 이상)",
+        "normalizedKey": "건축법시행령/36"
+      }
+    ],
+    "practicalNote": "계단 코어는 공동주택 평면 계획의 핵심 변수. 5층·11층 두 기준점을 기억하고 특별피난계단 요건(전실·방연 등) 확인. 대피공간과 겹치지 않게 배치 여부 초기 검토.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-APT-006", "version": "1.1", "isActive": true, "sortOrder": 60,
+    "selectedUse": "공동주택", "applicableUses": ["공동주택"],
+    "applicableZones": ["*"],
+    "category": "승강기",
+    "title": "승강기 및 장애인용 승강기 설치 의무 확인",
+    "description": "6층 이상 건축물은 승강기 설치가 의무입니다. 승강기 대수 부족 시 공용 면적이 증가해 분양 면적이 줄어드는 리스크가 있습니다. 장애인·노인·임산부 편의법상 장애인용 승강기 기준도 별도로 확인하세요.",
+    "requiredInputs": ["계획 층수", "계획 세대수"],
+    "relatedLaws": ["건축법 제64조", "장애인·노인·임산부 등의 편의증진 보장에 관한 법률"],
+    "isAutoCheckable": false, "priority": "low",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 64,
+        "clauseTextSummary": "승강기 설치 의무 — 6층 이상 건축물, 비상용 승강기(10층 이상)",
+        "normalizedKey": "건축법/64"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 89,
+        "clauseTextSummary": "승강기 설치 기준 — 대수 산정 방법 (바닥면적 합계 기준)",
+        "normalizedKey": "건축법시행령/89"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "장애인·노인·임산부 등의 편의증진 보장에 관한 법률",
+        "article": 8,
+        "clauseTextSummary": "편의시설 설치 의무 — 장애인용 승강기 설치 대상 및 기준",
+        "normalizedKey": "장애인편의법/8"
+      }
+    ],
+    "practicalNote": "승강기 샤프트 위치·크기는 구조·설비 계획과 직결. 법정 최소 대수는 출퇴근·이사 피크 시 혼잡도 높음 — 임차인 유치 리스크 상담 시 언급.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+
+  // ── 제1종근린생활시설 기본 항목 (6개) ───────────────────────────────────
+  {
+    "id": "RI-NH1-001", "version": "1.1", "isActive": true, "sortOrder": 10,
+    "selectedUse": "제1종근린생활시설", "applicableUses": ["제1종근린생활시설"],
+    "applicableZones": ["*"],
+    "category": "허용용도",
+    "title": "세부 업종 허용 여부 및 바닥면적 상한 확인",
+    "description": "소매점·음식점(300㎡ 미만)·의원·탁구장 등 계획 업종이 해당 용도지역에서 허용되는지 개별 확인이 필요합니다. 음식점·소매점 등은 바닥면적이 300㎡를 초과하면 제2종으로 분류되어 허용 여부 자체가 달라집니다. 업종과 면적 조건을 동시에 충족하지 않으면 허가가 반려되므로 사업 계획 초기에 반드시 확정하세요.",
+    "requiredInputs": ["계획 업종(세부)", "계획 업종별 바닥면적", "판정 용도지역"],
+    "relatedLaws": ["국토계획법 제76조", "건축법 별표 1 제3호"],
+    "isAutoCheckable": false, "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 76,
+        "clauseTextSummary": "용도지역별 건축물 용도 제한",
+        "normalizedKey": "국토계획법/76"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": null,
+        "appendixRef": "별표1",
+        "subParagraph": "3호",
+        "clauseTextSummary": "건축물 용도 분류 — 제1종근린생활시설 해당 업종 목록 및 바닥면적 기준",
+        "normalizedKey": "건축법/별표1/3호"
+      }
+    ],
+    "practicalNote": "음식점 300㎡ 미만 기준이 핵심. 사업 계획 단계에서 업종·면적 조건 동시 확인 필수. 용도지역별 허용 업종 목록은 국토계획법 시행령 별표4와 교차 검토.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-NH1-002", "version": "1.1", "isActive": true, "sortOrder": 20,
+    "selectedUse": "제1종근린생활시설", "applicableUses": ["제1종근린생활시설"],
+    "applicableZones": ["*"],
+    "category": "밀도",
+    "title": "건폐율·용적률 상한 확인",
+    "description": "조례 실적용 상한이 법정 상한보다 낮게 설정된 경우 규모를 줄여야 하며 이는 수익 가능 면적 감소로 직결됩니다. 특히 근린상업지역 이하에서는 용적률 조례값이 예상보다 낮게 설정되어 초기 사업성 분석이 빗나가는 사례가 많으니 반드시 조례 기준값으로 검토하세요.",
+    "requiredInputs": ["계획 층수", "계획 연면적", "판정 용도지역"],
+    "relatedLaws": ["국토계획법 제77조·제78조", "해당 시·군·구 도시계획 조례"],
+    "isAutoCheckable": false, "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 77,
+        "clauseTextSummary": "용도지역별 건폐율 기준",
+        "normalizedKey": "국토계획법/77"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 78,
+        "clauseTextSummary": "용도지역별 용적률 기준",
+        "normalizedKey": "국토계획법/78"
+      },
+      {
+        "referenceType": "ordinance",
+        "lawName": "해당 시·군·구 도시계획 조례",
+        "article": 1,
+        "clauseTextSummary": "지자체 실적용 건폐율·용적률 상한 — 관할 지자체 조례 개별 확인 필수",
+        "normalizedKey": "도시계획조례/건폐율용적률"
+      }
+    ],
+    "practicalNote": "법정 상한 ≠ 실적용 상한. 조례 기준값으로 초기 사업성 검토 필수. 근린상업지역 이하 소규모 필지는 조례 용적률 편차가 커 반드시 해당 지자체 도시계획과 확인.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-NH1-003", "version": "1.1", "isActive": true, "sortOrder": 30,
+    "selectedUse": "제1종근린생활시설", "applicableUses": ["제1종근린생활시설"],
+    "applicableZones": ["*"],
+    "category": "도로/건축선",
+    "title": "접도 요건 및 차량 진출입 가능 여부 확인",
+    "description": "건축허가를 위한 최소 접도 폭(4m 이상)을 충족하지 못하면 허가 신청 자체가 반려됩니다. 소규모 필지는 도로 폭·형태에 따라 주차 진출입 동선 확보가 불가능해지면 주차장 계획 전체가 무너질 수 있습니다. 의원·체육시설 등 이용자 방문 빈도가 높은 시설일수록 동선 계획을 초기 단계에 확정해야 합니다.",
+    "requiredInputs": ["대지 접면 도로 폭", "차량 진출입 가능 방향", "건축선 지정 여부"],
+    "relatedLaws": ["건축법 제44조·제46조", "해당 시·군·구 건축 조례"],
+    "isAutoCheckable": false, "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 44,
+        "clauseTextSummary": "대지와 도로의 관계 — 최소 접도 폭 4m 이상(예외 조항 있음)",
+        "normalizedKey": "건축법/44"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 46,
+        "clauseTextSummary": "건축선 지정 및 후퇴 기준",
+        "normalizedKey": "건축법/46"
+      }
+    ],
+    "practicalNote": "소규모 필지에서 가장 자주 발생하는 반려 사유. 4m 미만 도로에 접한 대지는 도로 확장(수용·사용승낙) 가능성 먼저 확인. 건축선 후퇴 적용 시 실질 건축 가능 면적 즉시 재산출 필요.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-NH1-004", "version": "1.1", "isActive": true, "sortOrder": 40,
+    "selectedUse": "제1종근린생활시설", "applicableUses": ["제1종근린생활시설"],
+    "applicableZones": ["*"],
+    "category": "주차",
+    "title": "시설 연면적 기준 주차대수 산정",
+    "description": "연면적 대비 주차대수 기준(조례)을 충족하지 못하면 규모를 줄이거나 별도 부설주차장 부지를 확보해야 합니다. 의원·체육시설은 이용자 회전율이 높아 법정 기준 충족만으로는 민원이 발생할 수 있습니다. 근린상업·일반상업지역 도심 입지 시 감면 기준 적용 여부를 지자체에 사전 확인하세요.",
+    "requiredInputs": ["계획 연면적", "판정 용도지역", "도심 여부"],
+    "relatedLaws": ["주차장법 제19조", "해당 시·군·구 주차장 조례"],
+    "isAutoCheckable": false, "priority": "medium",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "주차장법",
+        "article": 19,
+        "clauseTextSummary": "부설주차장 설치 의무 — 시설 규모별 주차대수 기준",
+        "normalizedKey": "주차장법/19"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "주차장법 시행령",
+        "article": null,
+        "appendixRef": "별표1",
+        "clauseTextSummary": "시설물 종류별 부설주차장 설치 기준 (근린생활시설 산정 기준)",
+        "normalizedKey": "주차장법시행령/별표1"
+      },
+      {
+        "referenceType": "ordinance",
+        "lawName": "해당 시·군·구 주차장 설치 조례",
+        "article": 1,
+        "clauseTextSummary": "지자체 강화 기준 적용 여부 — 관할 지자체 조례 개별 확인 필수",
+        "normalizedKey": "주차장조례/지역별기준"
+      }
+    ],
+    "practicalNote": "도심 입지(상업지역) 감면 여부는 지자체마다 편차 큼. 도심 감면 + 연면적 축소 시나리오 비교 검토 권장. 체육시설·의원 등 회전율 높은 업종은 법정 기준 이상 확보 필요.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-NH1-005", "version": "1.1", "isActive": true, "sortOrder": 50,
+    "selectedUse": "제1종근린생활시설", "applicableUses": ["제1종근린생활시설"],
+    "applicableZones": ["*"],
+    "category": "피난/계단",
+    "title": "직통계단 설치 요건 및 피난 동선 확인",
+    "description": "3층 이상 건물은 직통계단이 최소 1개소 필요하며, 5층 이상이면 2개소가 필수입니다. 의원·노인복지관 등 보행약자 이용 비율이 높은 시설은 피난 계획 기준이 추가로 적용될 수 있습니다. 계단 위치를 늦게 확정하면 각 층 임대 가능 면적 배치가 전면 수정될 수 있습니다.",
+    "requiredInputs": ["계획 층수", "계획 업종(장애인·노인 이용 여부)", "각 층 바닥면적"],
+    "relatedLaws": ["건축법 제49조", "건축법 시행령 제34조~제36조", "장애인·노인·임산부 등의 편의증진 보장에 관한 법률"],
+    "isAutoCheckable": false, "priority": "medium",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 49,
+        "clauseTextSummary": "피난시설·방화구획 설치 의무",
+        "normalizedKey": "건축법/49"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 34,
+        "clauseTextSummary": "직통계단 설치 기준 (3층 이상 1개소, 5층 이상 2개소)",
+        "normalizedKey": "건축법시행령/34"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 35,
+        "clauseTextSummary": "피난계단 설치 기준 (5층 이상, 지하 2층 이하)",
+        "normalizedKey": "건축법시행령/35"
+      }
+    ],
+    "practicalNote": "의원·노인복지관 등은 장애인편의법 편의시설 대상 여부 별도 확인. 소규모 상업건물에서 계단 코어 위치가 임대 단위 구성을 결정함 — 초기 단계 확정 필수.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-NH1-006", "version": "1.1", "isActive": true, "sortOrder": 60,
+    "selectedUse": "제1종근린생활시설", "applicableUses": ["제1종근린생활시설"],
+    "applicableZones": ["*"],
+    "category": "방화",
+    "title": "방화구획 적용 여부 및 스프링클러 연동 검토",
+    "description": "3층 이상이거나 연면적 1,000㎡ 이상이면 방화구획 대상입니다. 구획 기준을 충족하지 못하면 내화구조 보강 또는 스프링클러 의무 설치로 공사비가 예상 외로 증가합니다. 스프링클러를 설치하면 구획 면적이 3,000㎡까지 완화되므로 스프링클러 설치 비용과 구획 추가 공사비를 비교해 유리한 쪽을 선택하세요.",
+    "requiredInputs": ["계획 층수", "계획 연면적", "스프링클러 설치 계획 여부"],
+    "relatedLaws": ["건축법 제49조·제50조", "건축법 시행령 제46조"],
+    "isAutoCheckable": false, "priority": "low",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 49,
+        "clauseTextSummary": "피난시설·방화구획 설치 의무",
+        "normalizedKey": "건축법/49"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 50,
+        "clauseTextSummary": "내화구조 적용 대상 (3층 이상 또는 연면적 1,000㎡ 이상)",
+        "normalizedKey": "건축법/50"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 46,
+        "clauseTextSummary": "방화구획 설치 기준 — 1,000㎡마다 구획, 스프링클러 설치 시 3배 완화",
+        "normalizedKey": "건축법시행령/46"
+      }
+    ],
+    "practicalNote": "스프링클러 완화 조항(3배) 활용 시나리오와 내화구조 추가 공사비 비교 필수. 소방시설법상 자탐설비 설치 기준(400㎡)과 방화구획 기준 연동 확인.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+
+  // ── 제2종근린생활시설 기본 항목 (6개) ───────────────────────────────────
+  {
+    "id": "RI-NH2-001", "version": "1.1", "isActive": true, "sortOrder": 10,
+    "selectedUse": "제2종근린생활시설", "applicableUses": ["제2종근린생활시설"],
+    "applicableZones": ["*"],
+    "category": "허용용도",
+    "title": "세부 업종 허용 여부 및 용도지역·면적 이중 확인",
+    "description": "제2종은 제1종전용주거지역에서 전면 불허되며, 제2종·제3종일반주거지역에서도 업종별로 허용 여부가 다릅니다. 학원·독서실은 바닥면적 500㎡ 이상이면 교육연구시설로 재분류되고, 당구장·볼링장은 위락시설로 넘어가는 기준이 존재합니다. 면적과 업종 두 조건을 동시에 충족하지 않으면 허가가 반려되므로 가장 먼저 확인해야 합니다.",
+    "requiredInputs": ["계획 업종(세부)", "계획 업종별 바닥면적", "판정 용도지역"],
+    "relatedLaws": ["국토계획법 제76조", "건축법 별표 1 제4호"],
+    "isAutoCheckable": false, "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 76,
+        "clauseTextSummary": "용도지역별 건축물 용도 제한",
+        "normalizedKey": "국토계획법/76"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": null,
+        "appendixRef": "별표1",
+        "subParagraph": "4호",
+        "clauseTextSummary": "건축물 용도 분류 — 제2종근린생활시설 업종 목록 및 면적 기준",
+        "normalizedKey": "건축법/별표1/4호"
+      }
+    ],
+    "practicalNote": "학원 500㎡·음식점 300㎡ 이상 시 용도 재분류 기준이 핵심 리스크. 업종+면적 이중 확인 없이 설계 진행 시 허가 반려 직결. 다중이용업소 해당 여부도 동시 확인.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-NH2-002", "version": "1.1", "isActive": true, "sortOrder": 20,
+    "selectedUse": "제2종근린생활시설", "applicableUses": ["제2종근린생활시설"],
+    "applicableZones": ["*"],
+    "category": "밀도",
+    "title": "건폐율·용적률 상한 및 복합 용도 비율 확인",
+    "description": "조례 실적용 상한이 법정 상한보다 낮으면 규모 축소가 불가피합니다. 1층 근린생활·상층 주거 등 복합 건물로 구성할 경우 용도별 비율 기준 초과 시 용적률 산정 방식이 달라져 예상 연면적을 확보하지 못하는 경우가 발생합니다.",
+    "requiredInputs": ["계획 층수", "계획 연면적", "복합 용도 구성 여부", "판정 용도지역"],
+    "relatedLaws": ["국토계획법 제77조·제78조", "해당 시·군·구 도시계획 조례"],
+    "isAutoCheckable": false, "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 77,
+        "clauseTextSummary": "용도지역별 건폐율 기준",
+        "normalizedKey": "국토계획법/77"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 78,
+        "clauseTextSummary": "용도지역별 용적률 기준",
+        "normalizedKey": "국토계획법/78"
+      },
+      {
+        "referenceType": "ordinance",
+        "lawName": "해당 시·군·구 도시계획 조례",
+        "article": 1,
+        "clauseTextSummary": "지자체 실적용 건폐율·용적률 상한 — 관할 지자체 조례 개별 확인",
+        "normalizedKey": "도시계획조례/건폐율용적률"
+      }
+    ],
+    "practicalNote": "복합 건물 구성 시 용도별 비율 기준 초과 여부 면밀 검토. 조례 상한 기준값으로 초기 사업성 재산출 필수. 주거+상업 복합에서 용적률 산정 방식 오류 빈발.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-NH2-003", "version": "1.1", "isActive": true, "sortOrder": 30,
+    "selectedUse": "제2종근린생활시설", "applicableUses": ["제2종근린생활시설"],
+    "applicableZones": ["*"],
+    "category": "도로/건축선",
+    "title": "접도 요건 및 다중이용시설 진출입 동선 확인",
+    "description": "학원·고시원·체육시설 등 다수 이용자가 상시 출입하는 시설은 접도 폭 미달 시 소방차 접근 및 피난 동선 확보 불가로 허가 기준이 더 엄격하게 적용됩니다. 건축선 후퇴가 적용되면 실질 임대 가능 면적이 줄어들어 계획 면적 확보가 어려워질 수 있습니다.",
+    "requiredInputs": ["대지 접면 도로 폭", "건축선 지정 여부", "다중이용 업종 해당 여부"],
+    "relatedLaws": ["건축법 제44조·제46조", "다중이용업소의 안전관리에 관한 특별법"],
+    "isAutoCheckable": false, "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 44,
+        "clauseTextSummary": "대지와 도로의 관계 — 최소 접도 폭 4m 이상",
+        "normalizedKey": "건축법/44"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 46,
+        "clauseTextSummary": "건축선 지정 및 후퇴",
+        "normalizedKey": "건축법/46"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "다중이용업소의 안전관리에 관한 특별법",
+        "article": 9,
+        "clauseTextSummary": "다중이용업소 안전시설 — 비상구·피난로 확보 기준",
+        "normalizedKey": "다중이용업소법/9"
+      }
+    ],
+    "practicalNote": "다중이용업소 해당 시 건축법 접도 기준 외 다중이용업소법 비상구 기준도 동시 적용. 접도 폭 미달 대지는 도로 폭원 확보 방법 선행 검토.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-NH2-004", "version": "1.1", "isActive": true, "sortOrder": 40,
+    "selectedUse": "제2종근린생활시설", "applicableUses": ["제2종근린생활시설"],
+    "applicableZones": ["*"],
+    "category": "주차",
+    "title": "연면적 기준 주차대수 산정 및 감면 조건 확인",
+    "description": "주차대수 기준 미달 시 규모를 줄이거나 부설주차장 부지를 별도 확보해야 합니다. 공개공지 확보 또는 교통개선 협약 체결 시 감면이 적용될 수 있으나 조건이 복잡하므로 지자체 담당에 사전 확인이 필수입니다. 다중이용업소 해당 시 추가 대피 공간 확보 요건과 연동될 수 있습니다.",
+    "requiredInputs": ["계획 연면적", "판정 용도지역", "공개공지 계획 여부"],
+    "relatedLaws": ["주차장법 제19조", "해당 시·군·구 주차장 조례"],
+    "isAutoCheckable": false, "priority": "medium",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "주차장법",
+        "article": 19,
+        "clauseTextSummary": "부설주차장 설치 의무",
+        "normalizedKey": "주차장법/19"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "주차장법 시행령",
+        "article": null,
+        "appendixRef": "별표1",
+        "clauseTextSummary": "시설물 종류별 부설주차장 설치 기준",
+        "normalizedKey": "주차장법시행령/별표1"
+      },
+      {
+        "referenceType": "ordinance",
+        "lawName": "해당 시·군·구 주차장 설치 조례",
+        "article": 1,
+        "clauseTextSummary": "지자체 강화 기준 및 감면 조건 — 관할 지자체 조례 개별 확인",
+        "normalizedKey": "주차장조례/지역별기준"
+      }
+    ],
+    "practicalNote": "공개공지 확보 감면 조건은 지자체별 편차 큼. 도심 입지 학원·고시원은 주차 확보 불가 상황 빈발 — 주차 면수 확보 불가 시 규모 축소 시나리오 사전 수립 권장.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-NH2-005", "version": "1.1", "isActive": true, "sortOrder": 50,
+    "selectedUse": "제2종근린생활시설", "applicableUses": ["제2종근린생활시설"],
+    "applicableZones": ["*"],
+    "category": "피난/계단",
+    "title": "직통계단·피난계단 설치 요건 및 고시원 강화 기준 확인",
+    "description": "5층 이상은 직통계단 2개소, 11층 이상은 특별피난계단이 필수입니다. 고시원·다중이용업소는 일반 건물보다 피난 기준이 강화되어 발코니형 피난구·비상조명 등 추가 설비 비용이 발생합니다. 계단 코어를 늦게 확정하면 각 층 임대 면적 구성이 전면 수정될 수 있어 초기 설계 단계에서 반드시 확정해야 합니다.",
+    "requiredInputs": ["계획 층수", "계획 업종(고시원·다중이용업 해당 여부)", "각 층 바닥면적"],
+    "relatedLaws": ["건축법 제49조", "건축법 시행령 제34조~제36조", "다중이용업소의 안전관리에 관한 특별법 제9조"],
+    "isAutoCheckable": false, "priority": "medium",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 49,
+        "clauseTextSummary": "피난시설 설치 의무",
+        "normalizedKey": "건축법/49"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 35,
+        "clauseTextSummary": "피난계단 설치 기준 (5층 이상)",
+        "normalizedKey": "건축법시행령/35"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 36,
+        "clauseTextSummary": "특별피난계단 설치 기준 (11층 이상)",
+        "normalizedKey": "건축법시행령/36"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "다중이용업소의 안전관리에 관한 특별법",
+        "article": 9,
+        "clauseTextSummary": "다중이용업소 강화 피난 기준 — 비상구·피난유도선 추가 적용",
+        "normalizedKey": "다중이용업소법/9"
+      }
+    ],
+    "practicalNote": "고시원 비상구는 각 층 외부 대피 가능 구조 필수. 특별피난계단 전실 면적이 임대 효율에 영향 — 층수 확정 전 계단 코어 크기 사전 검토.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-NH2-006", "version": "1.1", "isActive": true, "sortOrder": 60,
+    "selectedUse": "제2종근린생활시설", "applicableUses": ["제2종근린생활시설"],
+    "applicableZones": ["*"],
+    "category": "방화",
+    "title": "방화구획 면적 기준 및 스프링클러 의무 설치 검토",
+    "description": "연면적 1,000㎡ 이상 또는 3층 이상이면 방화구획 대상입니다. 스프링클러 설치 시 구획 면적이 3,000㎡까지 완화되므로 내화구조 추가 공사비와 스프링클러 설치비를 비교해 선택하세요. 노래연습장·PC방 등 화재 위험이 높은 업종은 소방시설 강화 기준이 별도 적용되므로 소방서 사전 협의가 필요합니다.",
+    "requiredInputs": ["계획 층수", "계획 연면적", "스프링클러 설치 계획 여부", "화재위험 업종 해당 여부"],
+    "relatedLaws": ["건축법 제49조·제50조", "건축법 시행령 제46조", "화재예방, 소방시설 설치·유지 및 안전관리에 관한 법률"],
+    "isAutoCheckable": false, "priority": "low",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 50,
+        "clauseTextSummary": "내화구조 대상 건축물",
+        "normalizedKey": "건축법/50"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 46,
+        "clauseTextSummary": "방화구획 설치 기준 — 스프링클러 설치 시 3배 완화",
+        "normalizedKey": "건축법시행령/46"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "소방시설 설치 및 관리에 관한 법률",
+        "article": 12,
+        "clauseTextSummary": "소방시설 설치 의무 — 다중이용업소 강화 기준 별도 적용",
+        "normalizedKey": "소방시설법/12"
+      }
+    ],
+    "practicalNote": "다중이용업소 해당 업종은 방화구획 외 소방시설 완비증명서까지 필요. 스프링클러 설치 시 방화구획 완화(3배) 활용 시나리오와 비용 비교 필수.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+
+  // ── 업무시설 기본 항목 (7개) ─────────────────────────────────────────────
+  {
+    "id": "RI-OFF-001", "version": "1.1", "isActive": true, "sortOrder": 10,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"],
+    "applicableZones": ["*"],
+    "category": "허용용도",
+    "title": "업무시설 허용 여부 및 유형(오피스텔/일반업무) 확정",
+    "description": "주거전용지역은 업무시설이 원칙적으로 불가하며, 제1·2종일반주거지역은 연면적 3,000㎡ 미만 소규모 업무시설에 한해 허용되는 경우가 있습니다. 오피스텔(준주택)은 일반 업무시설과 허용 용도지역·주차 기준이 달라 유형을 먼저 확정하지 않으면 이후 허가 검토 전체가 방향을 잃습니다.",
+    "requiredInputs": ["업무시설 세부 유형(오피스텔/일반업무)", "계획 연면적", "판정 용도지역"],
+    "relatedLaws": ["국토계획법 제76조", "건축법 별표 1 제14호"],
+    "isAutoCheckable": false, "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 76,
+        "clauseTextSummary": "용도지역별 건축물 용도 제한 — 업무시설 허용 용도지역",
+        "normalizedKey": "국토계획법/76"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": null,
+        "appendixRef": "별표1",
+        "subParagraph": "14호",
+        "clauseTextSummary": "건축물 용도 분류 — 업무시설 유형 (일반 업무시설 vs 오피스텔)",
+        "normalizedKey": "건축법/별표1/14호"
+      }
+    ],
+    "practicalNote": "오피스텔은 준주택으로 주차·구조 기준이 일반 업무시설과 상이. 유형 미확정 시 이후 검토 전체 방향 오류 발생. 분양·임대 구조 확정 전 유형 먼저 결정.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-OFF-002", "version": "1.1", "isActive": true, "sortOrder": 20,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"],
+    "applicableZones": ["*"],
+    "category": "밀도",
+    "title": "건폐율·용적률 상한 및 공공기여 인센티브 확인",
+    "description": "업무지구·특화지구는 용적률 완화 인센티브가 있으나 공공기여(공개공지·공공임대·기부채납 등) 조건이 수반됩니다. 조건 없이 인센티브만 적용한 설계로 진행하면 허가 단계에서 전면 수정이 발생합니다. 복합건물(주거+업무) 구성 시 용도별 비율 기준 초과 여부를 동시에 검토하세요.",
+    "requiredInputs": ["계획 층수", "계획 연면적", "복합 용도 비율", "공공기여 계획"],
+    "relatedLaws": ["국토계획법 제77조·제78조", "해당 시·군·구 도시계획 조례"],
+    "isAutoCheckable": false, "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 77,
+        "clauseTextSummary": "용도지역별 건폐율 기준",
+        "normalizedKey": "국토계획법/77"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 78,
+        "clauseTextSummary": "용도지역별 용적률 기준",
+        "normalizedKey": "국토계획법/78"
+      },
+      {
+        "referenceType": "ordinance",
+        "lawName": "해당 시·군·구 도시계획 조례",
+        "article": 1,
+        "clauseTextSummary": "지자체 실적용 건폐율·용적률 및 공공기여 인센티브 조건 — 관할 지자체 조례 확인",
+        "normalizedKey": "도시계획조례/건폐율용적률"
+      }
+    ],
+    "practicalNote": "인센티브 용적률과 공공기여 조건은 세트. 공공기여 면적·비율을 사전에 확정하지 않으면 허가 단계 전면 수정 위험. 복합 용도 구성 시 용도별 용적률 합산 기준 검토 필수.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-OFF-003", "version": "1.1", "isActive": true, "sortOrder": 30,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"],
+    "applicableZones": ["*"],
+    "category": "도로/건축선",
+    "title": "도로 접면 요건·건축선 후퇴 및 하역·주차 동선 확인",
+    "description": "대규모 업무시설은 업무용 차량 하역 동선과 방문자 주차 진출입 동선이 분리되어야 하는 경우가 많습니다. 접도 폭 미달이나 건축선 후퇴 적용 시 저층부 로비·상업공간 배치가 제약되어 임대 면적 확보에 직접 영향을 줍니다. 대형 부지는 대지 분할·합필 가능성도 함께 검토하세요.",
+    "requiredInputs": ["대지 접면 도로 폭·방향(수)", "건축선 지정 여부", "하역 공간 계획"],
+    "relatedLaws": ["건축법 제44조·제46조", "해당 시·군·구 건축 조례"],
+    "isAutoCheckable": false, "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 44,
+        "clauseTextSummary": "대지와 도로의 관계 — 최소 접도 폭 4m 이상 (대형 건축물은 별도 조례 기준)",
+        "normalizedKey": "건축법/44"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 46,
+        "clauseTextSummary": "건축선 지정 및 후퇴 기준",
+        "normalizedKey": "건축법/46"
+      }
+    ],
+    "practicalNote": "건축선 후퇴 후 저층부 로비·필로티 면적 재산출 필수. 하역·방문자·서비스 동선 분리 설계는 저층 임대 효율에 직결. 대형 부지는 대지분할·합필 가능성을 교통영향평가 전에 검토.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-OFF-004", "version": "1.1", "isActive": true, "sortOrder": 40,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"],
+    "applicableZones": ["*"],
+    "category": "피난/계단",
+    "title": "피난계단·특별피난계단 설치 요건 확인",
+    "description": "5층 이상은 직통계단 2개소가 필수이며, 11층 이상은 특별피난계단이 요구됩니다. 계단 코어 위치와 폭이 각 층 임대 가능 면적(임대율)에 직결되므로 설계 초기 단계에서 확정하지 않으면 층별 평면 계획이 반복 수정됩니다.",
+    "requiredInputs": ["계획 층수", "각 층 바닥면적"],
+    "relatedLaws": ["건축법 제49조", "건축법 시행령 제34조~제36조"],
+    "isAutoCheckable": false, "priority": "medium",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 49,
+        "clauseTextSummary": "피난시설 설치 의무",
+        "normalizedKey": "건축법/49"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 35,
+        "clauseTextSummary": "피난계단 설치 기준 (5층 이상)",
+        "normalizedKey": "건축법시행령/35"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 36,
+        "clauseTextSummary": "특별피난계단 설치 기준 (11층 이상 — 전실·방연 구조 포함)",
+        "normalizedKey": "건축법시행령/36"
+      }
+    ],
+    "practicalNote": "특별피난계단 전실(3㎡ 이상) 면적이 코어 크기를 키움 — 11층 이상 업무시설 임대 효율 계산 시 반드시 반영. 계단 코어 위치는 설계 초기에 구조·설비팀과 동시 협의.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-OFF-005", "version": "1.1", "isActive": true, "sortOrder": 50,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"],
+    "applicableZones": ["*"],
+    "category": "승강기",
+    "title": "승강기·비상용 승강기 대수 및 적정성 검토",
+    "description": "6층 이상은 승강기 설치 의무이며 10층 이상은 비상용 승강기도 필수입니다. 법정 최소 대수만 설치하면 출퇴근 피크 시간대 혼잡도가 높아 임차인 유치에 불리해집니다. 장애인용 승강기 설치 의무 여부도 별도 확인하세요.",
+    "requiredInputs": ["계획 층수", "계획 연면적", "예상 상주 인원"],
+    "relatedLaws": ["건축법 제64조", "장애인·노인·임산부 등의 편의증진 보장에 관한 법률"],
+    "isAutoCheckable": false, "priority": "medium",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 64,
+        "clauseTextSummary": "승강기 설치 의무 (6층 이상) 및 비상용 승강기 (10층 이상)",
+        "normalizedKey": "건축법/64"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 89,
+        "clauseTextSummary": "승강기 설치 기준 — 대수 산정 방법",
+        "normalizedKey": "건축법시행령/89"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "장애인·노인·임산부 등의 편의증진 보장에 관한 법률",
+        "article": 8,
+        "clauseTextSummary": "편의시설 설치 의무 — 장애인용 승강기 설치 대상",
+        "normalizedKey": "장애인편의법/8"
+      }
+    ],
+    "practicalNote": "법정 최소 대수(연면적 3,000㎡당 1대 기준)는 출퇴근 피크 혼잡도 높음. 임차인 유치 경쟁력을 위해 1.5~2배 확보 권장. 비상용 승강기 위치는 소방·피난 코어와 연동 결정.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-OFF-006", "version": "1.1", "isActive": true, "sortOrder": 60,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"],
+    "applicableZones": ["*"],
+    "category": "주차",
+    "title": "업무시설 주차대수 산정 및 교통영향평가 연동 확인",
+    "description": "연면적 기준 주차 조례를 충족하지 못하면 규모 축소 또는 지하주차장 증설이 필요해 공사비가 크게 증가합니다. 연면적 5,000㎡ 이상은 교통영향평가 대상이 되며, 평가 결과에 따라 주차 대수가 늘어나거나 진출입 도로 개선 협약이 요구될 수 있습니다.",
+    "requiredInputs": ["계획 연면적", "교통영향평가 대상 여부", "공개공지 계획 여부"],
+    "relatedLaws": ["주차장법 제19조", "도시교통정비 촉진법 제15조", "해당 시·군·구 주차장 조례"],
+    "isAutoCheckable": false, "priority": "medium",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "주차장법",
+        "article": 19,
+        "clauseTextSummary": "부설주차장 설치 의무 — 용도·규모별 설치 기준",
+        "normalizedKey": "주차장법/19"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "주차장법 시행령",
+        "article": null,
+        "appendixRef": "별표1",
+        "clauseTextSummary": "부설주차장 설치 기준 — 용도별 단위면적당 주차대수",
+        "normalizedKey": "주차장법시행령/별표1"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "도시교통정비 촉진법",
+        "article": 15,
+        "clauseTextSummary": "교통영향평가 시행 의무 — 연면적 5,000㎡ 이상 업무시설",
+        "normalizedKey": "도시교통정비법/15"
+      },
+      {
+        "referenceType": "ordinance",
+        "lawName": "해당 시·군·구 주차장 설치 조례",
+        "article": 1,
+        "clauseTextSummary": "지자체별 주차대수 산정 기준 — 법정 기준 대비 강화 가능",
+        "normalizedKey": "주차장조례/지역별기준"
+      }
+    ],
+    "practicalNote": "업무시설은 조례마다 주차 기준이 크게 다름(100~150㎡당 1대). 지하주차장 1개 층 추가 시 공사비 약 3~5억 원 증가. 교통영향평가 결과에 따른 추가 주차대수는 인허가 직전에 협의되므로 초기 기획 단계에서 여유 층고 확보 필요.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+  {
+    "id": "RI-OFF-007", "version": "1.1", "isActive": true, "sortOrder": 70,
+    "selectedUse": "업무시설", "applicableUses": ["업무시설"],
+    "applicableZones": ["*"],
+    "category": "방화",
+    "title": "방화구획 및 복합 용도 간 구획 분리 검토",
+    "description": "업무시설은 연면적이 크고 층고가 높아 방화구획 면적 초과 시 내화구조 보강 또는 스프링클러 의무 설치로 공사비 증가 폭이 큽니다. 오피스텔과 일반 업무시설을 복합 구성하면 용도별 방화구획 분리가 추가로 요구되어 코어 설계가 복잡해집니다. 스프링클러 설치 여부(구획 면적 3배 완화)와 연동해 비용을 비교 검토하세요.",
+    "requiredInputs": ["계획 층수", "계획 연면적", "복합 용도 구성 여부", "스프링클러 설치 계획 여부"],
+    "relatedLaws": ["건축법 제49조·제50조", "건축법 시행령 제46조"],
+    "isAutoCheckable": false, "priority": "low",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 49,
+        "clauseTextSummary": "피난시설 및 용도제한 — 방화구획 설치 의무 근거",
+        "normalizedKey": "건축법/49"
+      },
+      {
+        "referenceType": "statute",
+        "lawName": "건축법",
+        "article": 50,
+        "clauseTextSummary": "내화구조 — 방화구획 내화 성능 기준",
+        "normalizedKey": "건축법/50"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "건축법 시행령",
+        "article": 46,
+        "clauseTextSummary": "방화구획 설치 기준 — 1,000㎡마다 구획 (스프링클러 시 3,000㎡까지 완화)",
+        "normalizedKey": "건축법시행령/46"
+      }
+    ],
+    "practicalNote": "스프링클러 전층 설치 시 방화구획 면적이 3배(최대 3,000㎡)로 완화되어 코어 계획 자유도 상승. 오피스텔+업무 복합 시 주거용·비주거용 방화구획 분리로 계단·복도 코어가 이중화되는 사례 다수 — 기획 단계에서 복합 비율 결정 필수.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": true }
+  },
+
+  // ── 오버레이 — 지구단위계획구역 포함 시 추가 (전체 용도 공통) ──────────────
+  {
+    "id": "RI-OVL-DUP-001", "version": "1.1", "isActive": true, "sortOrder": 1,
+    "selectedUse": "*", "applicableUses": ["*"],
+    "applicableZones": ["*"],
+    "category": "지구단위계획",
+    "title": "지구단위계획 개별 지침 우선 적용 확인",
+    "description": "[우선 검토] 이 대지는 지구단위계획구역 내에 위치합니다. 건축선 지정, 허용 용도 범위, 최대 용적률, 외관·색채 기준 등 개별 지침이 일반 건축기준을 대체하거나 추가 제한할 수 있습니다. 결정도·지침서를 먼저 확인하지 않으면 설계 전면 수정이 발생할 수 있습니다.",
+    "requiredInputs": ["지구단위계획 결정도", "지구단위계획 지침서"],
+    "relatedLaws": ["국토계획법 제49조~제52조"],
+    "isAutoCheckable": true, "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "국토의 계획 및 이용에 관한 법률",
+        "article": 52,
+        "clauseTextSummary": "지구단위계획 수립 기준 — 건축물 용도·규모·형태·색채 결정",
+        "normalizedKey": "국토계획법/52"
+      },
+      {
+        "referenceType": "notice",
+        "lawName": "도시·군관리계획 수립지침",
+        "appendixRef": "제4편제1장",
+        "clauseTextSummary": "지구단위계획 내 건축 행위 허가 기준 및 지침 적용 방법",
+        "normalizedKey": "도시군관리계획수립지침/지구단위계획"
+      }
+    ],
+    "practicalNote": "지구단위계획 결정도·지침서는 관할 구청 도시계획과 방문 또는 토지이음(topis.go.kr) 열람. 지침 미확인 상태 설계 착수 금지 — 건축선·용도 위반으로 허가 반려 발생.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": false, "whenDistrictUnitPlan": true }
+  },
+
+  // ── 오버레이 — 개발제한구역 포함 시 추가 (전체 용도 공통) ──────────────────
+  {
+    "id": "RI-OVL-DAR-001", "version": "1.1", "isActive": true, "sortOrder": 2,
+    "selectedUse": "*", "applicableUses": ["*"],
+    "applicableZones": ["*"],
+    "category": "중첩규제",
+    "title": "개발제한구역 행위 허가 선결 검토",
+    "description": "[최우선 검토] 이 대지는 개발제한구역(그린벨트) 내에 위치합니다. 개특법상 허가 또는 신고 대상 여부를 관할 지자체에서 선결하지 않으면 이후 모든 설계 작업이 무효가 됩니다. 사업 착수 전 반드시 확인하세요.",
+    "requiredInputs": ["관할 지자체 건축 담당 확인", "개발행위 허가 가능 여부"],
+    "relatedLaws": ["개발제한구역의 지정 및 관리에 관한 특별조치법 제12조", "동법 시행령 제13조~제22조"],
+    "isAutoCheckable": true, "priority": "high",
+    "legalBasis": [
+      {
+        "referenceType": "statute",
+        "lawName": "개발제한구역의 지정 및 관리에 관한 특별조치법",
+        "article": 12,
+        "clauseTextSummary": "개발제한구역 내 행위 허가 또는 신고 대상 규정",
+        "normalizedKey": "개발제한구역법/12"
+      },
+      {
+        "referenceType": "enforcementDecree",
+        "lawName": "개발제한구역의 지정 및 관리에 관한 특별조치법 시행령",
+        "appendixRef": "별표1",
+        "clauseTextSummary": "허용 건축행위 목록 — 용도·규모·조건별 허가 가능 행위",
+        "normalizedKey": "개발제한구역법시행령/별표1"
+      }
+    ],
+    "practicalNote": "별표 1 해당 여부를 관할 지자체 '개발행위 허가 사전상담'으로 먼저 확인. 사전 상담 없이 설계 착수 시 전면 무효 리스크. 허가 처리 기간 통상 60~90일 추가.",
+    "source": "rule", "confidence": "low",
+    "trigger": { "alwaysInclude": false, "whenDevelopmentRestriction": true }
+  }
+]
