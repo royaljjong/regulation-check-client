@@ -58,10 +58,10 @@ public static class AiAssistContractBuilder
             Hints = hints.Take(12).ToList(),
             Guardrails =
             [
-                "Do not decide permitted or prohibited use.",
-                "Do not compute legal numbers or thresholds.",
-                "Only provide article navigation, search keywords, ordinance search guidance, and reminder hints.",
-                "Output must remain structured JSON.",
+                "허용/불허 또는 적합/부적합을 확정하지 말 것.",
+                "법적 수치나 기준값을 계산해서 단정하지 말 것.",
+                "관련 법령명, 조문 탐색 힌트, 검색 키워드, 조례 탐색 안내, 추가 확인 필요사항만 안내할 것.",
+                "반드시 한국어 JSON 응답 형식을 유지할 것.",
             ],
         };
     }

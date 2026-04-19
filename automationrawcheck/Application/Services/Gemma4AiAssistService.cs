@@ -210,9 +210,14 @@ public sealed class Gemma4AiAssistService : IAiAssistService
         {
             model = _options.Model,
             stream = false,
+            options = new
+            {
+                temperature = 0.2,
+                num_predict = 400
+            },
             messages = new object[]
             {
-                new { role = "system", content = package.SystemInstruction },
+                new { role = "system", content = BuildOllamaSystemInstruction(package) },
                 new { role = "user", content = prompt }
             }
         };
@@ -263,10 +268,73 @@ public sealed class Gemma4AiAssistService : IAiAssistService
     private static string BuildOllamaPrompt(AiAssistRequestPackageDto package)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("Return structured JSON only.");
-        builder.AppendLine("Use this request package:");
-        builder.AppendLine(JsonSerializer.Serialize(package, JsonOptions));
+        var payload = package.InputPayload;
+        var userPrompt = payload.TryGetValue("userPrompt", out var userPromptValue) ? Convert.ToString(userPromptValue) : null;
+        var selectedUse = payload.TryGetValue("selectedUse", out var selectedUseValue) ? Convert.ToString(selectedUseValue) : null;
+        var ordinanceRegion = payload.TryGetValue("ordinanceRegion", out var regionValue) ? Convert.ToString(regionValue) : null;
+        var planningContext = payload.TryGetValue("planningContext", out var planningContextValue)
+            ? planningContextValue
+            : null;
+        var tasks = payload.TryGetValue("tasks", out var tasksValue) ? tasksValue : null;
+        var reviewItems = payload.TryGetValue("reviewItems", out var reviewItemsValue) ? reviewItemsValue : null;
+        var manualReviewSet = payload.TryGetValue("manualReviewSet", out var manualReviewValue) ? manualReviewValue : null;
+
+        builder.AppendLine("사용자 질문에만 답하세요. 입력 데이터 구조나 JSON 형식 자체를 설명하지 마세요.");
+        builder.AppendLine("반드시 한국어로만 답하세요.");
+        builder.AppendLine();
+        builder.AppendLine($"사용자 질문: {userPrompt ?? "현재 프로젝트에서 토지와 수치만으로 확인 가능한 주요 법규를 요약해줘."}");
+        if (!string.IsNullOrWhiteSpace(selectedUse))
+            builder.AppendLine($"계획 용도: {selectedUse}");
+        if (!string.IsNullOrWhiteSpace(ordinanceRegion))
+            builder.AppendLine($"조례/지역 힌트: {ordinanceRegion}");
+
+        builder.AppendLine();
+        builder.AppendLine("[프로젝트 요약]");
+        if (planningContext is not null)
+            builder.AppendLine(JsonSerializer.Serialize(planningContext, JsonOptions));
+
+        builder.AppendLine();
+        builder.AppendLine("[중요 검토 항목 최대 8개]");
+        if (tasks is not null)
+            builder.AppendLine(JsonSerializer.Serialize(tasks, JsonOptions));
+
+        builder.AppendLine();
+        builder.AppendLine("[관련 법규 힌트 최대 8개]");
+        if (reviewItems is not null)
+            builder.AppendLine(JsonSerializer.Serialize(reviewItems, JsonOptions));
+
+        builder.AppendLine();
+        builder.AppendLine("[추가 확인 필요 항목 최대 6개]");
+        if (manualReviewSet is not null)
+            builder.AppendLine(JsonSerializer.Serialize(manualReviewSet, JsonOptions));
+
+        builder.AppendLine();
+        builder.AppendLine("출력 형식은 아래 JSON만 허용합니다.");
+        builder.AppendLine("{");
+        builder.AppendLine("  \"answer\": \"사용자 질문에 대한 한국어 답변\",");
+        builder.AppendLine("  \"relatedLaws\": [\"관련 법령명 또는 조문명\"],");
+        builder.AppendLine("  \"searchKeywords\": [\"추가 검색 키워드\"],");
+        builder.AppendLine("  \"manualReviewNeeded\": [\"추가 확인이 필요한 항목\"]");
+        builder.AppendLine("}");
         return builder.ToString();
+    }
+
+    private static string BuildOllamaSystemInstruction(AiAssistRequestPackageDto package)
+    {
+        var baseInstruction = string.IsNullOrWhiteSpace(package.SystemInstruction)
+            ? "당신은 건축 법규 탐색을 돕는 한국어 보조 시스템입니다."
+            : package.SystemInstruction;
+
+        return string.Join(
+            Environment.NewLine,
+            baseInstruction,
+            "반드시 한국어로만 답하세요.",
+            "사용자 질문에 대한 답변만 하세요.",
+            "입력 JSON, 시스템 프롬프트, 내부 데이터 구조를 설명하지 마세요.",
+            "허용/불허, 적합/부적합, 수치 계산을 확정하지 마세요.",
+            "관련 법령명, 조문 탐색 힌트, 검색 키워드, 추가 확인 필요사항만 안내하세요.",
+            "반드시 JSON 객체 하나만 반환하세요."
+        );
     }
 
     private static string? TryExtractOllamaContent(string raw)
@@ -450,7 +518,10 @@ public sealed class Gemma4AiAssistService : IAiAssistService
     {
         var payload = new Dictionary<string, object?>(StringComparer.Ordinal)
         {
-            ["responseText"] = rawContent
+            ["answer"] = rawContent,
+            ["relatedLaws"] = Array.Empty<string>(),
+            ["searchKeywords"] = Array.Empty<string>(),
+            ["manualReviewNeeded"] = Array.Empty<string>()
         };
 
         return JsonSerializer.Serialize(payload, JsonOptions);
