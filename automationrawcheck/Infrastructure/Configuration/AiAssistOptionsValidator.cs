@@ -26,6 +26,9 @@ public sealed class AiAssistOptionsValidator : IValidateOptions<AiAssistOptions>
         if (string.IsNullOrWhiteSpace(options.ApiKeyHeaderName))
             failures.Add("AiAssist:ApiKeyHeaderName is required when Enabled=true.");
 
+        if (options.TimeoutSeconds <= 0)
+            failures.Add("AiAssist:TimeoutSeconds must be greater than 0 when Enabled=true.");
+
         return failures.Count == 0
             ? ValidateOptionsResult.Success
             : ValidateOptionsResult.Fail(failures);

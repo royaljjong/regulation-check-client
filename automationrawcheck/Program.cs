@@ -193,7 +193,7 @@ try
         if (!string.IsNullOrWhiteSpace(options.Endpoint))
             client.BaseAddress = new Uri(options.Endpoint);
 
-        client.Timeout = TimeSpan.FromSeconds(10);
+        client.Timeout = TimeSpan.FromSeconds(Math.Max(options.TimeoutSeconds, 1));
         client.DefaultRequestHeaders.Add("Accept", "application/json");
     });
 

@@ -9,6 +9,7 @@ public sealed class AiAssistOptions
     public string Model { get; set; } = "gemma4";
     public string ExecutionMode { get; set; } = "preview";
     public string Endpoint { get; set; } = string.Empty;
+    public int TimeoutSeconds { get; set; } = 180;
     public string ApiKey { get; set; } = string.Empty;
     public string ApiKeyHeaderName { get; set; } = "Authorization";
     public string ApiKeyPrefix { get; set; } = "Bearer";

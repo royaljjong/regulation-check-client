@@ -225,7 +225,13 @@ public sealed class Gemma4AiAssistService : IAiAssistService
         using var response = await client.SendAsync(message, ct).ConfigureAwait(false);
         var raw = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
         var content = TryExtractOllamaContent(raw);
-        var (structuredJson, outputKeys) = TryExtractStructuredJson(content ?? raw);
+        var rawContent = content ?? raw;
+        var (structuredJson, outputKeys) = TryExtractStructuredJson(rawContent);
+        if (structuredJson is null && !string.IsNullOrWhiteSpace(rawContent))
+        {
+            structuredJson = BuildFallbackStructuredJson(rawContent);
+            outputKeys = ["responseText"];
+        }
 
         return new AiAssistRunResponseDto
         {
@@ -233,12 +239,12 @@ public sealed class Gemma4AiAssistService : IAiAssistService
             Model = _options.Model,
             ExecutionMode = _options.ExecutionMode,
             IsConfigured = true,
-            Success = response.IsSuccessStatusCode && structuredJson is not null,
+            Success = response.IsSuccessStatusCode && !string.IsNullOrWhiteSpace(rawContent),
             HttpStatusCode = (int)response.StatusCode,
             Error = response.IsSuccessStatusCode
-                ? structuredJson is null ? "structured_json_not_found" : null
+                ? null
                 : $"http_{(int)response.StatusCode}",
-            RawResponse = Clip(content ?? raw),
+            RawResponse = Clip(rawContent),
             StructuredOutputJson = structuredJson,
             OutputKeys = outputKeys,
             RequestPackage = package,
@@ -247,8 +253,8 @@ public sealed class Gemma4AiAssistService : IAiAssistService
                 "Local Ollama endpoint used.",
                 $"model={_options.Model}",
                 $"httpStatus={(int)response.StatusCode}",
-                structuredJson is null
-                    ? "Ollama responded but structured JSON could not be extracted."
+                outputKeys.SequenceEqual(["responseText"])
+                    ? "Ollama returned plain text, so a fallback structured response was generated."
                     : "Structured JSON payload extracted successfully."
             ]
         };
@@ -438,5 +444,15 @@ public sealed class Gemma4AiAssistService : IAiAssistService
             return raw;
 
         return raw.Length <= 4000 ? raw : raw[..4000] + "...";
+    }
+
+    private static string BuildFallbackStructuredJson(string rawContent)
+    {
+        var payload = new Dictionary<string, object?>(StringComparer.Ordinal)
+        {
+            ["responseText"] = rawContent
+        };
+
+        return JsonSerializer.Serialize(payload, JsonOptions);
     }
 }
