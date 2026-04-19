@@ -818,6 +818,15 @@ function AiAssistWidget({ status, preview, loading, error, query, onQueryChange,
   const configuredLabel = status?.isConfigured ? '연결 준비 완료' : '미설정'
   const configuredColor = status?.isConfigured ? '#166534' : '#92400e'
   const configuredBg = status?.isConfigured ? '#f0fdf4' : '#fef3c7'
+  let parsedRunOutput = null
+  if (runResult?.structuredOutputJson) {
+    try {
+      parsedRunOutput = JSON.parse(runResult.structuredOutputJson)
+    } catch {
+      parsedRunOutput = null
+    }
+  }
+  const fallbackResponseText = parsedRunOutput?.responseText
 
   return (
     <div style={{ marginTop: 10, border: '1px solid #dbeafe', borderRadius: 10, background: '#f8fbff', padding: '12px 14px' }}>
@@ -920,7 +929,13 @@ function AiAssistWidget({ status, preview, loading, error, query, onQueryChange,
             </div>
           )}
 
-          {runResult.structuredOutputJson && (
+          {fallbackResponseText && (
+            <div style={{ marginTop: 8, padding: '10px 11px', borderRadius: 8, background: '#eff6ff', border: '1px solid #bfdbfe', fontSize: 12, color: '#1e293b', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+              {fallbackResponseText}
+            </div>
+          )}
+
+          {runResult.structuredOutputJson && !fallbackResponseText && (
             <pre style={{ marginTop: 8, padding: '10px', borderRadius: 8, background: '#0f172a', color: '#e2e8f0', fontSize: 10, lineHeight: 1.6, overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
               {runResult.structuredOutputJson}
             </pre>
