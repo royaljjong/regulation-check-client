@@ -1,144 +1,132 @@
-// =============================================================================
-// BuildingReviewPanel.jsx
-// POST /api/regulation-check/review 전용 UI 컴포넌트
-//
-// [렌더 구조]
-//   상단 요약 바 (reviewLevel + zoning + inputSummary)
-//   검토 항목 목록 (priority 정렬 → category 그룹)
-//     각 항목: judgeStatus 배지 + judgeNote 하이라이트 + priority 테두리
-//   nextLevelHint 패널 (입력 폼 + 다음 단계 활성화 항목 미리보기)
-// =============================================================================
-
 import { useState, useEffect, useCallback } from 'react'
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 상수
-// ─────────────────────────────────────────────────────────────────────────────
+import { fetchApi } from '../utils/apiClient'
 
 const JUDGE_META = {
-  active:    { label: '✅ 판정 완료', color: '#0369a1', bg: '#e0f2fe', border: '#bae6fd', dot: '#0ea5e9' },
-  reference: { label: '📋 기준값',   color: '#92400e', bg: '#fef3c7', border: '#fde68a', dot: '#f59e0b' },
-  pending:   { label: '⚠️ 입력 필요', color: '#64748b', bg: '#f1f5f9', border: '#e2e8f0', dot: '#94a3b8' },
+  active: { label: '자동 판정 완료', color: '#0369a1', bg: '#e0f2fe', border: '#bae6fd' },
+  reference: { label: '법규 확인 필요', color: '#92400e', bg: '#fef3c7', border: '#fde68a' },
+  pending: { label: '추가 입력 필요', color: '#64748b', bg: '#f1f5f9', border: '#e2e8f0' },
 }
 
 const PRIORITY_STYLE = {
-  high:   { borderLeft: '3px solid #fca5a5' },
+  high: { borderLeft: '3px solid #fca5a5' },
   medium: { borderLeft: '3px solid #fde68a' },
-  low:    { borderLeft: '3px solid #e2e8f0' },
+  low: { borderLeft: '3px solid #e2e8f0' },
 }
 
-const CATEGORY_ORDER = [
-  '중첩규제', '지구단위계획', '허용용도', '밀도', '도로/건축선',
-  '주차', '피난/계단', '승강기', '방화', '기타',
-]
+const CATEGORY_ORDER = ['밀도', '접근', '주차', '피난', '방화', '인허가', '조례', '협의', '기타']
 
 const CATEGORY_COLOR = {
-  '중첩규제':    '#dc2626',
-  '지구단위계획':'#1d4ed8',
-  '허용용도':    '#d97706',
-  '밀도':        '#d97706',
-  '도로/건축선': '#0891b2',
-  '주차':        '#475569',
-  '피난/계단':   '#475569',
-  '승강기':      '#475569',
-  '방화':        '#7c3aed',
-  '기타':        '#94a3b8',
+  밀도: '#dc2626',
+  접근: '#1d4ed8',
+  주차: '#0f766e',
+  피난: '#d97706',
+  방화: '#7c3aed',
+  인허가: '#be123c',
+  조례: '#4338ca',
+  협의: '#0891b2',
+  기타: '#94a3b8',
 }
 
-// active 항목 하위 상태 분류 — judgeNote 키워드 기반
 function getActiveSubStatus(note) {
   if (!note) return 'ok'
-  if (/불가|초과|위반|금지/.test(note)) return 'danger'
-  if (/추가 필요|검토 필요|협의 필요|주의/.test(note)) return 'warning'
+  if (/(불가|초과|위반|금지|부적합|미충족)/.test(note)) return 'danger'
+  if (/(추가|확인 필요|검토 필요|주의|협의)/.test(note)) return 'warning'
   return 'ok'
 }
 
 const ACTIVE_SUB_META = {
-  danger:  { label: '❌ 불가/초과', color: '#991b1b', bg: '#fef2f2', border: '#fecaca', dot: '#dc2626' },
-  warning: { label: '⚠️ 주의 필요', color: '#92400e', bg: '#fef3c7', border: '#fde68a', dot: '#f59e0b' },
-  ok:      { label: '✅ 적합',      color: '#166534', bg: '#f0fdf4', border: '#bbf7d0', dot: '#16a34a' },
+  danger: { label: '위험', color: '#991b1b', bg: '#fef2f2', border: '#fecaca' },
+  warning: { label: '주의', color: '#92400e', bg: '#fef3c7', border: '#fde68a' },
+  ok: { label: '적합', color: '#166534', bg: '#f0fdf4', border: '#bbf7d0' },
 }
 
-// 다음 단계 입력 폼 필드 정의
 const HINT_INPUT_META = {
-  floorArea:           { label: '계획 연면적', unit: 'm²', type: 'number',
-                         hint: '설계 개요 또는 건축계획 초안 기준 (지상+지하 합산)' },
-  floorCount:          { label: '계획 층수 (지상)', unit: '층', type: 'number',
-                         hint: '지상층 기준 — 지하층 제외하여 입력' },
-  siteArea:            { label: '대지면적', unit: 'm²', type: 'number',
-                         hint: '토지대장 또는 지적도 기준 (토지이음에서 확인 가능)' },
-  roadFrontageWidth:   { label: '도로 접면 폭', unit: 'm', type: 'number',
-                         hint: '대지 경계에서 접하는 도로의 폭 (현황 도로 포함)' },
-  unitCount:           { label: '세대수', unit: '세대', type: 'number',
-                         hint: '전체 계획 세대 합계' },
-  unitArea:            { label: '세대별 전용면적', unit: 'm²', type: 'number',
-                         hint: '전용면적 기준 (공급면적 아님)' },
-  housingSubtype:      { label: '공동주택 유형', unit: '', type: 'select',
-                         options: ['아파트', '연립', '다세대'] },
-  parkingType:         { label: '주차 방식', unit: '', type: 'select',
-                         options: ['underground', 'ground', 'mechanical'],
-                         display: ['지하', '지상', '기계식'] },
-  detailUseSubtype:    { label: '업종 세부', unit: '', type: 'text', placeholder: '예: 의원, 슈퍼마켓, 고시원',
-                         hint: '실제 입점 예정 업종을 구체적으로 입력 (다중이용업 해당 여부 판단에 사용)' },
-  detailUseFloorArea:  { label: '업종 바닥면적', unit: 'm²', type: 'number',
-                         hint: '해당 업종이 사용하는 전용 바닥면적' },
-  isMultipleOccupancy: { label: '다중이용업 해당', unit: '', type: 'select',
-                         options: ['true', 'false'], display: ['예', '아니오'] },
-  officeSubtype:       { label: '업무시설 유형', unit: '', type: 'select',
-                         options: ['오피스텔', '일반업무'] },
-  occupantCount:       { label: '예상 상주 인원', unit: '명', type: 'number',
-                         hint: '상시 근무·거주 인원 (피난 계단 수 산정 기준)' },
-  mixedUseRatio:       { label: '복합 용도 비율', unit: '%', type: 'number', placeholder: '예: 30',
-                         hint: '전체 연면적 대비 해당 용도 비율 (예: 근린생활 30%)' },
+  siteArea: { label: '대지면적', unit: 'm²', type: 'number', hint: '대상 필지의 면적입니다.' },
+  buildingArea: { label: '건축면적', unit: 'm²', type: 'number', hint: '건축선 후퇴를 반영한 건축면적입니다.' },
+  floorArea: { label: '연면적', unit: 'm²', type: 'number', hint: '주용도 기준 연면적입니다.' },
+  floorCount: { label: '층수', unit: '층', type: 'number', hint: '지상층 기준으로 입력합니다.' },
+  buildingHeight: { label: '높이', unit: 'm', type: 'number', hint: '계획 건축물의 최고 높이입니다.' },
+  roadFrontageWidth: { label: '도로폭', unit: 'm', type: 'number', hint: '접하는 도로의 유효 폭입니다.' },
+  unitCount: { label: '세대수', unit: '세대', type: 'number', hint: '공동주택 총 세대수입니다.' },
+  unitArea: { label: '세대당 전용면적', unit: 'm²', type: 'number', hint: '전용면적 기준입니다.' },
+  housingSubtype: { label: '공동주택 유형', type: 'select', options: ['아파트', '연립', '다세대'] },
+  parkingType: { label: '주차 방식', type: 'select', options: ['underground', 'ground', 'mechanical'], display: ['지하', '지상', '기계식'] },
+  detailUseSubtype: { label: '세부 업종', type: 'text', placeholder: '예: 의원, 슈퍼마켓, 학원', hint: '근린생활시설·업무시설의 세부 업종을 입력합니다.' },
+  detailUseFloorArea: { label: '업종 바닥면적', unit: 'm²', type: 'number', hint: '세부 업종에 해당하는 면적입니다.' },
+  isMultipleOccupancy: { label: '다중이용 여부', type: 'select', options: ['true', 'false'], display: ['예', '아니오'] },
+  officeSubtype: { label: '업무시설 유형', type: 'select', options: ['오피스텔', '일반업무'] },
+  occupantCount: { label: '수용인원', unit: '명', type: 'number', hint: '동시 점유 기준 인원입니다.' },
+  mixedUseRatio: { label: '혼합용도 비율', unit: '%', type: 'number', placeholder: '예: 30', hint: '해당 용도가 차지하는 연면적 비율입니다.' },
+  roomCount: { label: '실수', unit: '실', type: 'number', hint: '근린생활·숙박·창고 등에서 사용하는 총 실수입니다.' },
+  guestRoomCount: { label: '객실수', unit: '실', type: 'number', hint: '숙박시설 객실 총량입니다.' },
+  bedCount: { label: '병상수', unit: '병상', type: 'number', hint: '의료시설 병상 총량입니다.' },
+  studentCount: { label: '학생수', unit: '명', type: 'number', hint: '교육시설 학생수입니다.' },
+  vehicleIngressType: { label: '차량 출입방식', type: 'text', placeholder: '예: 전면 진출입 / 후면 하역', hint: '물류·공장·창고 차량 동선을 간단히 적습니다.' },
+  educationSpecialCriteria: { label: '교육 특수기준', type: 'text', placeholder: '예: 통학로, 운동장, 학년 구성', hint: '교육시설 특수 기준을 적습니다.' },
+  medicalSpecialCriteria: { label: '의료 특수기준', type: 'text', placeholder: '예: 응급, 중환자실, 수술실', hint: '의료시설 특별법 검토 포인트입니다.' },
+  accommodationSpecialCriteria: { label: '숙박 특수기준', type: 'text', placeholder: '예: 객실형태, 부대시설', hint: '숙박 운영 특수사항을 적습니다.' },
+  hazardousMaterialProfile: { label: '위험물 프로필', type: 'text', placeholder: '예: 저장 탱크, 위험물 분류', hint: '공장 위험물 검토 기준입니다.' },
+  logisticsOperationProfile: { label: '물류 운영 프로필', type: 'text', placeholder: '예: 하역대수, 출입차량 규모', hint: '물류·창고 운영 특성을 적습니다.' },
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 메인 컴포넌트
-// ─────────────────────────────────────────────────────────────────────────────
+const JSON_HEADERS = {
+  'Content-Type': 'application/json',
+}
 
 export default function BuildingReviewPanel({ selectedUse, coordinate, onBuildingInputsChange }) {
   const [formValues, setFormValues] = useState({})
-  const [data,       setData]       = useState(null)
-  const [loading,    setLoading]    = useState(false)
-  const [error,      setError]      = useState(null)
-  const [hintOpen,   setHintOpen]   = useState(false)
-  const [hintForm,   setHintForm]   = useState({})
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [hintOpen, setHintOpen] = useState(false)
+  const [hintForm, setHintForm] = useState({})
+  const [aiStatus, setAiStatus] = useState(null)
+  const [aiPreview, setAiPreview] = useState(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState(null)
 
-  // selectedUse / coordinate 변경 → quick 자동 조회
   useEffect(() => {
-    if (!selectedUse || !coordinate) { setData(null); return }
-    setFormValues({})
-    setHintForm({})
-    setHintOpen(false)
-    fetchReview({}, null)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedUse, coordinate?.lat, coordinate?.lon])
+    let cancelled = false
+
+    async function loadAiStatus() {
+      try {
+        const res = await fetchApi('/api/regulation-check/research/ai-assist/status')
+        if (!res.ok) throw new Error('status-error')
+        const payload = await res.json()
+        if (!cancelled) setAiStatus(payload)
+      } catch {
+        if (!cancelled) setAiStatus(null)
+      }
+    }
+
+    loadAiStatus()
+    return () => { cancelled = true }
+  }, [])
 
   const fetchReview = useCallback(async (buildingInputs, reviewLevel) => {
     if (!selectedUse || !coordinate) return
-    setLoading(true); setError(null)
+    setLoading(true)
+    setError(null)
 
     const hasInputs = Object.keys(buildingInputs).length > 0
     const parsedInputs = hasInputs ? parseInputs(buildingInputs) : undefined
 
     try {
       const body = {
-        longitude:     coordinate.lon,
-        latitude:      coordinate.lat,
+        longitude: coordinate.lon,
+        latitude: coordinate.lat,
         selectedUse,
         ...(parsedInputs && { buildingInputs: parsedInputs }),
-        ...(reviewLevel  && { reviewLevel }),
+        ...(reviewLevel && { reviewLevel }),
       }
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL ?? ''}/api/regulation-check/review`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '1' },
-          body: JSON.stringify(body),
-        }
-      )
+      const res = await fetchApi('/api/regulation-check/review', {
+        method: 'POST',
+        headers: JSON_HEADERS,
+        body: JSON.stringify(body),
+      })
       if (!res.ok) throw new Error('api-error')
-      setData(await res.json())
+      const payload = await res.json()
+      setData(payload)
     } catch {
       setError('판정 조회에 실패했습니다.')
     } finally {
@@ -146,7 +134,68 @@ export default function BuildingReviewPanel({ selectedUse, coordinate, onBuildin
     }
   }, [selectedUse, coordinate])
 
-  // 다음 단계 입력 폼 제출
+  useEffect(() => {
+    if (!selectedUse || !coordinate) {
+      setData(null)
+      setAiPreview(null)
+      return
+    }
+    setFormValues({})
+    setHintForm({})
+    setHintOpen(false)
+    fetchReview({}, null)
+  }, [selectedUse, coordinate?.lat, coordinate?.lon, fetchReview])
+
+  useEffect(() => {
+    if (!selectedUse || !data) {
+      setAiPreview(null)
+      return
+    }
+
+    const requestBody = {
+      selectedUse,
+      useProfile: data.useProfile ?? null,
+      planningContext: {
+        reviewLevel: data.reviewLevel,
+        zoning: data.zoning ?? null,
+        checklist: data.projectChecklist ?? null,
+        activeRuleBundles: data.activeRuleBundles ?? [],
+        developmentActionApiStatus: data.developmentActionApiStatus ?? null,
+      },
+      reviewItems: data.reviewItems ?? [],
+      tasks: data.tasks ?? [],
+      manualReviewSet: data.manualReviews ?? [],
+      ordinanceRegion: data.location?.address ?? data.location?.regionName ?? null,
+    }
+
+    let cancelled = false
+
+    async function loadPreview() {
+      setAiLoading(true)
+      setAiError(null)
+      try {
+        const res = await fetchApi('/api/regulation-check/research/ai-assist-preview', {
+          method: 'POST',
+          headers: JSON_HEADERS,
+          body: JSON.stringify(requestBody),
+        })
+        if (!res.ok) throw new Error('preview-error')
+        const payload = await res.json()
+        if (!cancelled) setAiPreview(payload)
+      } catch {
+        if (!cancelled) {
+          setAiPreview(null)
+          setAiError('Gemma4 미리보기를 불러오지 못했습니다.')
+        }
+      } finally {
+        if (!cancelled) setAiLoading(false)
+      }
+    }
+
+    loadPreview()
+    return () => { cancelled = true }
+  }, [selectedUse, data])
+
   const handleHintSubmit = (e) => {
     e.preventDefault()
     const merged = { ...formValues, ...hintForm }
@@ -156,54 +205,46 @@ export default function BuildingReviewPanel({ selectedUse, coordinate, onBuildin
     onBuildingInputsChange?.(parseInputs(merged))
   }
 
-  // ── 데이터 가공 ──────────────────────────────────────────────────────────
-  const items   = data?.reviewItems ?? []
-  const hint    = data?.nextLevelHint
+  const items = data?.reviewItems ?? []
+  const hint = data?.nextLevelHint
   const summary = data?.inputSummary
-  const zoning  = data?.zoning
-  const level   = data?.reviewLevel ?? 'quick'
+  const zoning = data?.zoning
+  const level = data?.reviewLevel ?? 'quick'
 
-  // priority 정렬: high → medium → low, 그 안에서 category 순서 유지
   const priorityOrder = { high: 0, medium: 1, low: 2 }
   const sortedItems = [...items].sort((a, b) => {
     const pa = priorityOrder[a.priority] ?? 2
     const pb = priorityOrder[b.priority] ?? 2
     if (pa !== pb) return pa - pb
-    return CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category)
+    const ai = CATEGORY_ORDER.indexOf(a.category)
+    const bi = CATEGORY_ORDER.indexOf(b.category)
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
   })
 
-  // active/reference/pending 카운트
   const statusCount = items.reduce((acc, it) => {
-    acc[it.judgeStatus] = (acc[it.judgeStatus] ?? 0) + 1; return acc
+    acc[it.judgeStatus] = (acc[it.judgeStatus] ?? 0) + 1
+    return acc
   }, {})
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // 렌더
-  // ─────────────────────────────────────────────────────────────────────────
   return (
     <div>
-
-      {/* 로딩 */}
       {loading && (
         <div style={{ padding: '16px 0', textAlign: 'center', color: '#6b7280', fontSize: 12 }}>
           판정 중...
         </div>
       )}
 
-      {/* 오류 */}
       {!loading && error && (
         <div style={{ padding: '12px', fontSize: 12, color: '#b91c1c', background: '#fef2f2', borderRadius: 8, border: '1px solid #fecaca' }}>
           {error}
         </div>
       )}
 
-      {/* 결과 */}
       {!loading && !error && data && (
         <>
-          {/* ── 상단 요약 바 ─────────────────────────────────────────────── */}
           <SummaryBar level={level} zoning={zoning} statusCount={statusCount} summary={summary} items={sortedItems} selectedUse={selectedUse} />
+          <AiAssistCard status={aiStatus} preview={aiPreview} loading={aiLoading} error={aiError} />
 
-          {/* ── 검토 항목 목록 ───────────────────────────────────────────── */}
           {sortedItems.length === 0 ? (
             <div style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center', padding: '12px 0' }}>
               검토 항목이 없습니다.
@@ -216,7 +257,6 @@ export default function BuildingReviewPanel({ selectedUse, coordinate, onBuildin
             </div>
           )}
 
-          {/* ── nextLevelHint ────────────────────────────────────────────── */}
           {hint && (hint.additionalInputsNeeded?.length > 0 || hint.note) && (
             <NextLevelHintBlock
               hint={hint}
@@ -228,9 +268,8 @@ export default function BuildingReviewPanel({ selectedUse, coordinate, onBuildin
             />
           )}
 
-          {/* 출처 */}
           <div style={{ marginTop: 8, fontSize: 10, color: '#94a3b8', textAlign: 'right' }}>
-            초기 검토 기준 · 공간데이터 참고값 · 인허가 확정은 관청 확인 · {data.elapsedMs}ms
+            초기 검토 기준 · 공간데이터 참고값 · 허가 확정은 관할부서 확인 · {data.elapsedMs}ms
           </div>
         </>
       )}
@@ -238,30 +277,24 @@ export default function BuildingReviewPanel({ selectedUse, coordinate, onBuildin
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 상단 요약 바
-// ─────────────────────────────────────────────────────────────────────────────
-
 function SummaryBar({ level, zoning, statusCount, summary, items = [], selectedUse }) {
   const levelLabel = {
-    quick:    { label: '빠른 검토',   desc: '좌표·용도지역 기반 — 입력 없이 즉시 판정',                    color: '#475569', bg: '#f1f5f9' },
-    standard: { label: '표준 검토',   desc: '연면적·층수 입력 → 밀도·피난·방화 계산 판정',                  color: '#0369a1', bg: '#e0f2fe' },
-    detailed: { label: '상세 검토',   desc: '세부 입력 반영 → 주차·다중이용·업종별 항목 포함',              color: '#6d28d9', bg: '#ede9fe' },
-    expert:   { label: '전문가 검토', desc: '모든 입력 완비 → 전 항목 계산 판정',                           color: '#065f46', bg: '#d1fae5' },
+    quick: { label: '빠른 검토', desc: '좌표·용도지역 기반 — 입력 없이 즉시 판정', color: '#475569', bg: '#f1f5f9' },
+    standard: { label: '표준 검토', desc: '연면적·층수 입력 → 밀도·피난·방화 계산 판정', color: '#0369a1', bg: '#e0f2fe' },
+    detailed: { label: '상세 검토', desc: '세부 입력 반영 · Task/Checklist/수동검토 포함', color: '#6d28d9', bg: '#ede9fe' },
+    expert: { label: '전문가 검토', desc: '모든 입력 기반 전체 항목 판정', color: '#065f46', bg: '#d1fae5' },
   }[level] ?? { label: level, desc: '', color: '#475569', bg: '#f1f5f9' }
 
-  // active 항목 분류
-  const dangerItems  = items.filter(i => i.judgeStatus === 'active' && getActiveSubStatus(i.judgeNote) === 'danger')
+  const dangerItems = items.filter(i => i.judgeStatus === 'active' && getActiveSubStatus(i.judgeNote) === 'danger')
   const warningItems = items.filter(i => i.judgeStatus === 'active' && getActiveSubStatus(i.judgeNote) === 'warning')
-  const hasIssues    = dangerItems.length > 0 || warningItems.length > 0
+  const hasIssues = dangerItems.length > 0 || warningItems.length > 0
   const criticalItems = [...dangerItems, ...warningItems].slice(0, 4)
 
-  // 핵심 1줄 요약
   let oneLiner = null
   if (items.length > 0) {
     if (!hasIssues) {
       const okCount = items.filter(i => i.judgeStatus === 'active').length
-      if (okCount > 0) oneLiner = `${selectedUse ?? '선택 용도'} — 검토 항목 ${okCount}건 적합`
+      if (okCount > 0) oneLiner = `${selectedUse ?? '선택 용도'} · 검토 항목 ${okCount}건 적합`
     } else {
       const parts = [
         ...dangerItems.slice(0, 2).map(i => i.title),
@@ -273,176 +306,129 @@ function SummaryBar({ level, zoning, statusCount, summary, items = [], selectedU
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 4 }}>
-      {/* 단계 + 용도지역 + 상태 카운트 */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, alignItems: 'center' }}>
-        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 5,
-          background: levelLabel.bg, color: levelLabel.color }}>
+        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 5, background: levelLabel.bg, color: levelLabel.color }}>
           {levelLabel.label}
         </span>
-        {levelLabel.desc && (
-          <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 400 }}>
-            {levelLabel.desc}
-          </span>
-        )}
+        {levelLabel.desc && <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 400 }}>{levelLabel.desc}</span>}
         {zoning?.zoneName && (
-          <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 5,
-            background: '#f0fdf4', color: '#15803d' }}>
+          <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 5, background: '#f0fdf4', color: '#15803d' }}>
             {zoning.zoneName}
             {zoning.farLimitPct != null && ` · 용적률 ${zoning.farLimitPct}%`}
             {zoning.bcRatioLimitPct != null && ` · 건폐율 ${zoning.bcRatioLimitPct}%`}
           </span>
         )}
-        {Object.entries(statusCount).map(([s, n]) => {
-          const m = JUDGE_META[s]
-          if (!m) return null
+        {Object.entries(statusCount).map(([status, count]) => {
+          const meta = JUDGE_META[status]
+          if (!meta) return null
           return (
-            <span key={s} style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 4,
-              background: m.bg, color: m.color }}>
-              {m.label} {n}
+            <span key={status} style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 4, background: meta.bg, color: meta.color }}>
+              {meta.label} {count}
             </span>
           )
         })}
       </div>
 
-      {/* 핵심 이슈 1줄 요약 배너 */}
       {oneLiner && (
-        <div style={{
-          fontSize: 12, fontWeight: 700, lineHeight: 1.4,
-          padding: '7px 12px', borderRadius: 7,
-          color:      hasIssues ? '#7c2d12' : '#14532d',
-          background: hasIssues ? '#fff7ed' : '#f0fdf4',
-          border:     `1px solid ${hasIssues ? '#fed7aa' : '#bbf7d0'}`,
-        }}>
-          {hasIssues ? '⚠️ ' : '✅ '}{oneLiner}
+        <div
+          style={{
+            fontSize: 12,
+            fontWeight: 700,
+            lineHeight: 1.4,
+            padding: '7px 12px',
+            borderRadius: 7,
+            color: hasIssues ? '#7c2d12' : '#14532d',
+            background: hasIssues ? '#fff7ed' : '#f0fdf4',
+            border: `1px solid ${hasIssues ? '#fed7aa' : '#bbf7d0'}`,
+          }}
+        >
+          {hasIssues ? '주의 ' : 'OK '}{oneLiner}
         </div>
       )}
 
-      {/* 위험/주의 항목 빠른 태그 */}
       {criticalItems.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-          {criticalItems.map((item, i) => {
-            const sm = ACTIVE_SUB_META[getActiveSubStatus(item.judgeNote)]
+          {criticalItems.map((item, index) => {
+            const meta = ACTIVE_SUB_META[getActiveSubStatus(item.judgeNote)]
             return (
-              <span key={i} style={{
-                fontSize: 10, padding: '2px 8px', borderRadius: 4, fontWeight: 700,
-                background: sm.bg, color: sm.color, border: `1px solid ${sm.border}`,
-              }}>
-                {sm.label.split(' ')[0]} {item.title}
+              <span key={`${item.title}-${index}`} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, fontWeight: 700, background: meta.bg, color: meta.color, border: `1px solid ${meta.border}` }}>
+                {meta.label} {item.title}
               </span>
             )
           })}
         </div>
       )}
 
-      {/* 누락 입력 안내 */}
       {summary?.missingNote && (
-        <div style={{ fontSize: 11, color: '#92400e', background: '#fef3c7',
-          padding: '6px 10px', borderRadius: 6, border: '1px solid #fde68a', lineHeight: 1.5 }}>
-          💡 {summary.missingNote}
+        <div style={{ fontSize: 11, color: '#92400e', background: '#fef3c7', padding: '6px 10px', borderRadius: 6, border: '1px solid #fde68a', lineHeight: 1.5 }}>
+          입력 안내 · {summary.missingNote}
         </div>
       )}
     </div>
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 검토 항목 카드
-// ─────────────────────────────────────────────────────────────────────────────
-
 function ReviewItemCard({ item }) {
   const [open, setOpen] = useState(false)
-  // active 항목은 sub-status 색상, 나머지는 기존 JUDGE_META
-  const jm = item.judgeStatus === 'active'
+  const judgeMeta = item.judgeStatus === 'active'
     ? ACTIVE_SUB_META[getActiveSubStatus(item.judgeNote)]
     : (JUDGE_META[item.judgeStatus] ?? JUDGE_META.pending)
-  const ps = PRIORITY_STYLE[item.priority] ?? PRIORITY_STYLE.low
-  const catColor = CATEGORY_COLOR[item.category] ?? '#94a3b8'
-  const sub = item.judgeStatus === 'active' ? getActiveSubStatus(item.judgeNote) : null
+  const priorityStyle = PRIORITY_STYLE[item.priority] ?? PRIORITY_STYLE.low
+  const categoryColor = CATEGORY_COLOR[item.category] ?? '#94a3b8'
+  const subStatus = item.judgeStatus === 'active' ? getActiveSubStatus(item.judgeNote) : null
 
   return (
     <div
       onClick={() => setOpen(v => !v)}
       style={{
-        padding: '9px 10px', borderRadius: 8,
-        border: `1px solid ${sub === 'danger' ? '#fca5a5' : item.priority === 'high' ? '#fca5a5' : '#f1f5f9'}`,
-        background: sub === 'danger' ? '#fff7f7' : sub === 'warning' ? '#fffbeb' : '#fff',
+        padding: '9px 10px',
+        borderRadius: 8,
+        border: `1px solid ${subStatus === 'danger' ? '#fca5a5' : item.priority === 'high' ? '#fca5a5' : '#f1f5f9'}`,
+        background: subStatus === 'danger' ? '#fff7f7' : subStatus === 'warning' ? '#fffbeb' : '#fff',
         cursor: 'pointer',
-        ...ps,
+        ...priorityStyle,
       }}
     >
-      {/* 제목 행 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
         <div style={{ display: 'flex', gap: 5, alignItems: 'center', flexWrap: 'wrap', flex: 1 }}>
-          {/* 카테고리 도트 */}
-          <span style={{ width: 6, height: 6, borderRadius: '50%',
-            background: catColor, display: 'inline-block', flexShrink: 0, marginTop: 1 }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#1e293b', lineHeight: 1.4 }}>
-            {item.title}
-          </span>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: categoryColor, display: 'inline-block', flexShrink: 0, marginTop: 1 }} />
+          <span style={{ fontSize: 12, fontWeight: 700, color: '#1e293b', lineHeight: 1.4 }}>{item.title}</span>
         </div>
         <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
-          {/* priority=high 배지 */}
           {item.priority === 'high' && (
-            <span style={{ fontSize: 9, padding: '2px 5px', borderRadius: 3,
-              background: '#fef2f2', color: '#b91c1c', fontWeight: 800, whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 9, padding: '2px 5px', borderRadius: 3, background: '#fef2f2', color: '#b91c1c', fontWeight: 800, whiteSpace: 'nowrap' }}>
               우선
             </span>
           )}
-          {/* judgeStatus 배지 */}
-          <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 4, whiteSpace: 'nowrap',
-            background: jm.bg, color: jm.color, fontWeight: 700, border: `1px solid ${jm.border}` }}>
-            {jm.label}
+          <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 4, whiteSpace: 'nowrap', background: judgeMeta.bg, color: judgeMeta.color, fontWeight: 700, border: `1px solid ${judgeMeta.border}` }}>
+            {judgeMeta.label}
           </span>
-          <span style={{ fontSize: 10, color: '#94a3b8', whiteSpace: 'nowrap' }}>
-            {open ? '접기 ▲' : '상세 ▼'}
-          </span>
+          <span style={{ fontSize: 10, color: '#94a3b8', whiteSpace: 'nowrap' }}>{open ? '접기' : '상세'}</span>
         </div>
       </div>
 
-      {/* judgeNote — 항상 표시 */}
       {item.judgeNote && (
-        <div style={{
-          marginTop: 6, padding: '6px 8px', borderRadius: 5,
-          background: jm.bg, border: `1px solid ${jm.border}`,
-          fontSize: 11, color: jm.color, lineHeight: 1.6, fontWeight: 500,
-        }}>
+        <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 5, background: judgeMeta.bg, border: `1px solid ${judgeMeta.border}`, fontSize: 11, color: judgeMeta.color, lineHeight: 1.6, fontWeight: 500 }}>
           {item.judgeNote}
         </div>
       )}
 
-      {/* 펼치기: description + relatedLaws */}
       {open && (
         <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #f1f5f9' }}>
-          <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.6, marginBottom: 5 }}>
-            {item.description}
-          </div>
-          {item.requiredInputs?.length > 0 && (
-            <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 3 }}>
-              필요 입력: {item.requiredInputs.join(' / ')}
-            </div>
-          )}
-          {item.relatedLaws?.length > 0 && (
-            <div style={{ fontSize: 10, color: '#94a3b8' }}>
-              {item.relatedLaws.join(' · ')}
-            </div>
-          )}
+          <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.6, marginBottom: 5 }}>{item.description}</div>
+          {item.requiredInputs?.length > 0 && <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 3 }}>필요 입력: {item.requiredInputs.join(' / ')}</div>}
+          {item.relatedLaws?.length > 0 && <div style={{ fontSize: 10, color: '#94a3b8' }}>{item.relatedLaws.join(' · ')}</div>}
         </div>
       )}
     </div>
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// nextLevelHint 패널
-// ─────────────────────────────────────────────────────────────────────────────
-
 function NextLevelHintBlock({ hint, hintOpen, hintForm, onToggle, onChange, onSubmit }) {
-  // 단계 완료 안내 (additionalInputsNeeded 없음 + note 있음)
   if (!hint.additionalInputsNeeded?.length) {
     return (
-      <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 8,
-        background: '#f0fdf4', border: '1px solid #bbf7d0', fontSize: 11, color: '#15803d' }}>
-        ✅ {hint.note ?? '이 단계의 판정이 완료되었습니다.'}
+      <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 8, background: '#f0fdf4', border: '1px solid #bbf7d0', fontSize: 11, color: '#15803d' }}>
+        {hint.note ?? '다음 단계에 필요한 입력이 모두 충족되었습니다.'}
       </div>
     )
   }
@@ -450,82 +436,59 @@ function NextLevelHintBlock({ hint, hintOpen, hintForm, onToggle, onChange, onSu
   const nextLevelLabel = {
     standard: '표준',
     detailed: '상세',
-    expert:   '전문가',
+    expert: '전문가',
   }[hint.nextLevel] ?? hint.nextLevel
 
   return (
-    <div style={{ marginTop: 10, border: '1px solid #e0e7ff', borderRadius: 10,
-      background: '#f5f3ff', overflow: 'hidden' }}>
-
-      {/* 헤더 */}
+    <div style={{ marginTop: 10, border: '1px solid #e0e7ff', borderRadius: 10, background: '#f5f3ff', overflow: 'hidden' }}>
       <button
         onClick={onToggle}
-        style={{ width: '100%', display: 'flex', justifyContent: 'space-between',
-          alignItems: 'center', padding: '10px 12px', background: 'none',
-          border: 'none', cursor: 'pointer', gap: 8 }}
+        style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'none', border: 'none', cursor: 'pointer', gap: 8 }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
           <span style={{ fontSize: 12, fontWeight: 700, color: '#4c1d95' }}>
-            {nextLevelLabel} 단계로 이동 — 입력 추가 시 {hint.willUnlock?.length ?? 0}개 항목 계산 가능
+            {nextLevelLabel} 단계로 이동하면 추가 Task {hint.willUnlock?.length ?? 0}개를 더 계산합니다.
           </span>
-          {hint.note && (
-            <span style={{ fontSize: 10, color: '#6d28d9', textAlign: 'left' }}>{hint.note}</span>
-          )}
+          {hint.note && <span style={{ fontSize: 10, color: '#6d28d9', textAlign: 'left' }}>{hint.note}</span>}
         </div>
-        <span style={{ fontSize: 11, color: '#6d28d9', flexShrink: 0 }}>
-          {hintOpen ? '▲ 접기' : '▼ 입력하기'}
-        </span>
+        <span style={{ fontSize: 11, color: '#6d28d9', flexShrink: 0 }}>{hintOpen ? '입력 닫기' : '입력하기'}</span>
       </button>
 
-      {/* 활성화될 항목 미리보기 (항상 표시) */}
-      {hint.willUnlock?.length > 0 && (
+      {hint.willAddTaskCategories?.length > 0 && (
         <div style={{ padding: '0 12px 8px', display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-          {hint.willUnlock.map((label, i) => (
-            <span key={i} style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4,
-              background: '#ede9fe', color: '#6d28d9', fontWeight: 500 }}>
-              {label.replace(/\s*\(RI-[^)]+\)/, '')}
+          {hint.willAddTaskCategories.map((label, index) => (
+            <span key={`${label}-${index}`} style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: '#ede9fe', color: '#6d28d9', fontWeight: 500 }}>
+              {label}
             </span>
           ))}
         </div>
       )}
 
-      {/* 입력 폼 */}
       {hintOpen && (
-        <form onSubmit={onSubmit}
-          style={{ padding: '0 12px 12px', borderTop: '1px solid #ddd6fe' }}>
+        <form onSubmit={onSubmit} style={{ padding: '0 12px 12px', borderTop: '1px solid #ddd6fe' }}>
           <div style={{ marginTop: 10, display: 'grid', gap: 8 }}>
             {hint.additionalInputsNeeded.map(({ field, label, reason }) => {
-              const meta = HINT_INPUT_META[field]
-              if (!meta) return null
+              const meta = HINT_INPUT_META[field] ?? { label, type: 'text' }
               return (
                 <div key={field}>
                   <label style={{ fontSize: 10, fontWeight: 700, color: '#6d28d9', display: 'block', marginBottom: 2 }}>
                     {meta.label ?? label}
                     {meta.unit && <span style={{ fontWeight: 400, color: '#94a3b8', marginLeft: 3 }}>({meta.unit})</span>}
-                    <span style={{ fontWeight: 400, color: '#a78bfa', marginLeft: 5 }}>{reason}</span>
+                    {reason && <span style={{ fontWeight: 400, color: '#a78bfa', marginLeft: 5 }}>{reason}</span>}
                   </label>
-                  {meta.hint && (
-                    <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 4, lineHeight: 1.4 }}>
-                      ℹ {meta.hint}
-                    </div>
-                  )}
+                  {meta.hint && <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 4, lineHeight: 1.4 }}>입력 힌트 · {meta.hint}</div>}
                   {meta.type === 'select' ? (
-                    <select
-                      value={hintForm[field] ?? ''}
-                      onChange={e => onChange(field, e.target.value)}
-                      style={inputStyle}
-                    >
+                    <select value={hintForm[field] ?? ''} onChange={e => onChange(field, e.target.value)} style={inputStyle}>
                       <option value="">선택</option>
-                      {meta.options.map((opt, i) => (
-                        <option key={opt} value={opt}>
-                          {meta.display?.[i] ?? opt}
-                        </option>
+                      {meta.options?.map((option, index) => (
+                        <option key={option} value={option}>{meta.display?.[index] ?? option}</option>
                       ))}
                     </select>
                   ) : (
                     <input
-                      type={meta.type}
-                      min="0" step="any"
+                      type={meta.type ?? 'text'}
+                      min={meta.type === 'number' ? '0' : undefined}
+                      step={meta.type === 'number' ? 'any' : undefined}
                       placeholder={meta.placeholder ?? (meta.unit ? `단위: ${meta.unit}` : '')}
                       value={hintForm[field] ?? ''}
                       onChange={e => onChange(field, e.target.value)}
@@ -536,11 +499,8 @@ function NextLevelHintBlock({ hint, hintOpen, hintForm, onToggle, onChange, onSu
               )
             })}
           </div>
-          <button type="submit"
-            style={{ marginTop: 10, width: '100%', padding: '8px', borderRadius: 6,
-              border: 'none', background: '#7c3aed', color: '#fff',
-              fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-            {nextLevelLabel} 단계로 판정
+          <button type="submit" style={{ marginTop: 10, width: '100%', padding: '8px', borderRadius: 6, border: 'none', background: '#7c3aed', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+            {nextLevelLabel} 단계로 재판정
           </button>
         </form>
       )}
@@ -548,42 +508,132 @@ function NextLevelHintBlock({ hint, hintOpen, hintForm, onToggle, onChange, onSu
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 헬퍼
-// ─────────────────────────────────────────────────────────────────────────────
+function AiAssistCard({ status, preview, loading, error }) {
+  const configuredLabel = status?.isConfigured ? '연결 준비 완료' : '미설정'
+  const configuredColor = status?.isConfigured ? '#166534' : '#92400e'
+  const configuredBg = status?.isConfigured ? '#f0fdf4' : '#fef3c7'
 
-const inputStyle = {
-  width: '100%', boxSizing: 'border-box',
-  padding: '5px 8px', borderRadius: 6,
-  border: '1px solid #c4b5fd', fontSize: 12,
-  background: '#fff', outline: 'none',
+  return (
+    <div style={{ marginTop: 10, border: '1px solid #dbeafe', borderRadius: 10, background: '#f8fbff', padding: '12px 14px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 800, color: '#1d4ed8', marginBottom: 4 }}>AI Assist · Gemma4</div>
+          <div style={{ fontSize: 11, color: '#64748b', lineHeight: 1.6 }}>
+            법규 위치 안내, 조문 번호 안내, 검색 키워드 추천, 조례 탐색, 누락 검토 리마인드만 제공합니다.
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
+          {status && (
+            <>
+              <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: configuredBg, color: configuredColor, fontWeight: 700 }}>
+                {configuredLabel}
+              </span>
+              <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: '#e0f2fe', color: '#0369a1', fontWeight: 700 }}>
+                {status.provider ?? 'gemma4'} · {status.executionMode ?? 'preview'}
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {status?.summaryLines?.length > 0 && (
+        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {status.summaryLines.map((line, index) => (
+            <div key={`${line}-${index}`} style={{ fontSize: 11, color: '#475569' }}>{line}</div>
+          ))}
+        </div>
+      )}
+
+      {loading && <div style={{ marginTop: 10, fontSize: 11, color: '#64748b' }}>Gemma4 미리보기를 생성 중입니다...</div>}
+      {!loading && error && <div style={{ marginTop: 10, fontSize: 11, color: '#b91c1c' }}>{error}</div>}
+
+      {!loading && preview && (
+        <div style={{ marginTop: 10, display: 'grid', gap: 8 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: '#eff6ff', color: '#1d4ed8', fontWeight: 700 }}>{preview.provider ?? 'gemma4'}</span>
+            <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: '#eff6ff', color: '#1d4ed8', fontWeight: 700 }}>{preview.model ?? 'gemma4'}</span>
+            <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: '#eff6ff', color: '#1d4ed8', fontWeight: 700 }}>{preview.executionMode ?? 'preview'}</span>
+          </div>
+
+          {preview.hints?.length > 0 ? (
+            <div style={{ display: 'grid', gap: 6 }}>
+              {preview.hints.map((hint, index) => (
+                <div key={`${hint.title ?? 'hint'}-${index}`} style={{ border: '1px solid #dbeafe', borderRadius: 8, background: '#fff', padding: '10px 11px' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>{hint.title ?? `안내 ${index + 1}`}</div>
+                  {hint.message && <div style={{ fontSize: 11, color: '#475569', lineHeight: 1.6, marginBottom: 4 }}>{hint.message}</div>}
+                  {hint.suggestedKeywords?.length > 0 && <div style={{ fontSize: 10, color: '#64748b' }}>검색 키워드 · {hint.suggestedKeywords.join(' / ')}</div>}
+                  {hint.linkedCardIds?.length > 0 && <div style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>연결 카드 · {hint.linkedCardIds.join(' / ')}</div>}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ fontSize: 11, color: '#64748b' }}>현재 표시할 Gemma4 미리보기 힌트가 없습니다.</div>
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
 
-/** form 값(모두 string)을 buildingInputs 타입에 맞게 변환 */
+const inputStyle = {
+  width: '100%',
+  boxSizing: 'border-box',
+  padding: '5px 8px',
+  borderRadius: 6,
+  border: '1px solid #c4b5fd',
+  fontSize: 12,
+  background: '#fff',
+  outline: 'none',
+}
+
 function parseInputs(raw) {
   const out = {}
-  const numFields = [
-    'floorArea', 'floorCount', 'siteArea', 'roadFrontageWidth',
-    'unitCount', 'unitArea', 'buildingHeight', 'detailUseFloorArea',
-    'occupantCount', 'mixedUseRatio',
+  const numberFields = [
+    'floorArea',
+    'floorCount',
+    'siteArea',
+    'buildingArea',
+    'roadFrontageWidth',
+    'unitCount',
+    'unitArea',
+    'buildingHeight',
+    'detailUseFloorArea',
+    'occupantCount',
+    'mixedUseRatio',
+    'roomCount',
+    'guestRoomCount',
+    'bedCount',
+    'studentCount',
   ]
-  const boolFields  = ['isMultipleOccupancy', 'isHighRiskOccupancy', 'hasDisabilityUsers',
-                        'hasPublicSpace', 'hasLoadingBay',
-                        'hasDistrictUnitPlanDocument', 'hasDevActRestrictionConsult']
-  const intFields   = ['floorCount', 'unitCount', 'occupantCount']
+  const booleanFields = [
+    'isMultipleOccupancy',
+    'isHighRiskOccupancy',
+    'hasDisabilityUsers',
+    'hasPublicSpace',
+    'hasLoadingBay',
+    'hasDistrictUnitPlanDocument',
+    'hasDevActRestrictionConsult',
+  ]
+  const integerFields = ['floorCount', 'unitCount', 'occupantCount', 'roomCount', 'guestRoomCount', 'bedCount', 'studentCount']
 
-  for (const [k, v] of Object.entries(raw)) {
-    if (v === '' || v == null) continue
-    if (boolFields.includes(k))      { out[k] = v === 'true'; continue }
-    if (numFields.includes(k)) {
-      const n = Number(v)
-      if (!Number.isFinite(n)) continue
-      // mixedUseRatio는 UI에서 %로 입력받아 0~1로 변환
-      if (k === 'mixedUseRatio') { out[k] = n / 100; continue }
-      out[k] = intFields.includes(k) ? Math.round(n) : n
+  for (const [key, value] of Object.entries(raw)) {
+    if (value === '' || value == null) continue
+    if (booleanFields.includes(key)) {
+      out[key] = value === 'true'
       continue
     }
-    out[k] = v   // string (housingSubtype, parkingType, detailUseSubtype, officeSubtype)
+    if (numberFields.includes(key)) {
+      const parsed = Number(value)
+      if (!Number.isFinite(parsed)) continue
+      if (key === 'mixedUseRatio') {
+        out[key] = parsed / 100
+        continue
+      }
+      out[key] = integerFields.includes(key) ? Math.round(parsed) : parsed
+      continue
+    }
+    out[key] = value
   }
+
   return out
 }

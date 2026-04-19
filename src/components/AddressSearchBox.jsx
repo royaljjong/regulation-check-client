@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { fetchApi } from '../utils/apiClient'
 
 const S = {
   // 헤더 안에서도 자연스럽게 보이는 카드 스타일
@@ -86,14 +87,11 @@ export default function AddressSearchBox({ searchText, onSearchTextChange, onCan
     lastQueryRef.current = kw
 
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL ?? ''}/api/regulation-check/address`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '1' },
-          body: JSON.stringify({ query: kw }),
-        }
-      )
+      const res = await fetchApi('/api/regulation-check/address', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: kw }),
+      })
       if (res.status === 404) { setMsg('주소를 찾을 수 없습니다.'); return }
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
@@ -122,14 +120,11 @@ export default function AddressSearchBox({ searchText, onSearchTextChange, onCan
 
     const query = lastQueryRef.current
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL ?? ''}/api/regulation-check/address/select`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '1' },
-          body: JSON.stringify({ query, candidateIndex: index }),
-        }
-      )
+      const res = await fetchApi('/api/regulation-check/address/select', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, candidateIndex: index }),
+      })
       if (res.ok) {
         const data     = await res.json()
         const selected = data.selectedCandidate ?? data.SelectedCandidate ?? c

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { buildReportText }   from '../utils/reportFormatter.js'
 import BuildingReviewPanel   from './BuildingReviewPanel.jsx'
+import { fetchApi } from '../utils/apiClient'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 상수
@@ -22,7 +23,7 @@ const CATEGORY_COLORS = {
   '방화':        '#7c3aed',
   '기타':        '#94a3b8',
 }
-const USE_OPTIONS = ['공동주택', '제1종근린생활시설', '제2종근린생활시설', '업무시설']
+const DEFAULT_USE_OPTIONS = ['공동주택', '제1종근린생활시설', '제2종근린생활시설', '업무시설', '교육시설', '의료시설', '숙박시설', '공장', '창고시설', '물류시설']
 
 // [3][4][5] 법규 레이어는 백엔드 POST /api/regulation-check/law-layers 에서 조회
 
@@ -38,6 +39,7 @@ export default function ResultSummaryPanel({
 
   const [lawLayers,        setLawLayers]        = useState(null)  // { coreLaws, extendedCoreLaws, mepLaws, dataSource, confidence }
   const [lawLayersLoading, setLawLayersLoading] = useState(false)
+  const [useOptions,       setUseOptions]       = useState(DEFAULT_USE_OPTIONS)
 
   const [calcInputs,    setCalcInputs]    = useState({ siteArea: '', buildingArea: '', totalFloorArea: '' })
   const [calcResult,    setCalcResult]    = useState(null)
@@ -48,6 +50,26 @@ export default function ResultSummaryPanel({
 
   // 빈 상태에서 미리 선택한 용도 — result 도착 시 자동 적용
   const [pendingUse, setPendingUse] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadUseProfiles() {
+      try {
+        const res = await fetchApi('/api/regulation-check/use-profiles')
+        if (!res.ok) throw new Error('use-profiles')
+        const payload = await res.json()
+        if (!cancelled && Array.isArray(payload) && payload.length > 0) {
+          setUseOptions(payload.map(item => item.displayName).filter(Boolean))
+        }
+      } catch {
+        if (!cancelled) setUseOptions(DEFAULT_USE_OPTIONS)
+      }
+    }
+
+    loadUseProfiles()
+    return () => { cancelled = true }
+  }, [])
 
   useEffect(() => {
     if (result && pendingUse && !selectedUse) {
@@ -85,19 +107,16 @@ export default function ResultSummaryPanel({
     setCalcLoading(true)
     setCalcError(null)
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL ?? ''}/api/calculator/basic`,
-        {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '1' },
-          body: JSON.stringify({
-            siteArea:       parseFloat(siteArea),
-            buildingArea:   parseFloat(buildingArea),
-            totalFloorArea: parseFloat(totalFloorArea),
-            zoneName:       result?.zoning?.zoneName ?? null,
-          }),
-        }
-      )
+      const res = await fetchApi('/api/calculator/basic', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          siteArea:       parseFloat(siteArea),
+          buildingArea:   parseFloat(buildingArea),
+          totalFloorArea: parseFloat(totalFloorArea),
+          zoneName:       result?.zoning?.zoneName ?? null,
+        }),
+      })
       if (res.ok) {
         const data = await res.json()
         setCalcResult(data.results ?? [])
@@ -132,13 +151,12 @@ export default function ResultSummaryPanel({
     setCalcResult(null)
     setCalcInputs({ siteArea: '', buildingArea: '', totalFloorArea: '' })
 
-    const baseUrl = import.meta.env.VITE_API_BASE_URL ?? ''
-    const headers = { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '1' }
+    const headers = { 'Content-Type': 'application/json' }
 
     setLawLayersLoading(true)
 
     // 법규 레이어 조회 (ReviewItems는 BuildingReviewPanel이 /review 로 직접 조회)
-    const layersRes = await fetch(`${baseUrl}/api/regulation-check/law-layers`, {
+    const layersRes = await fetchApi('/api/regulation-check/law-layers', {
       method: 'POST', headers,
       body: JSON.stringify({
         selectedUse:                    use,
@@ -302,7 +320,7 @@ export default function ResultSummaryPanel({
       {loading && <div style={{ padding: 20, textAlign: 'center', color: '#6b7280' }}>데이터 로드 중...</div>}
       {error   && <div style={{ padding: 20, textAlign: 'center', color: '#b91c1c', background: '#fef2f2', borderRadius: 10 }}>조회 실패: 서버 연결을 확인하세요.</div>}
       {!loading && !error && !result && (
-        <EntryGuide pendingUse={pendingUse} onPendingUseSelect={setPendingUse} />
+        <EntryGuide pendingUse={pendingUse} onPendingUseSelect={setPendingUse} useOptions={useOptions} />
       )}
 
       {!loading && !error && result && (() => {
@@ -449,7 +467,7 @@ export default function ResultSummaryPanel({
                 계획 용도를 선택하면 관련 법규와 검토 항목을 확인할 수 있습니다.
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {USE_OPTIONS.map(use => (
+                {useOptions.map(use => (
                   <button
                     key={use}
                     onClick={() => handleUseSelectInternal(use)}
@@ -721,9 +739,15 @@ const USE_ICONS = {
   '제1종근린생활시설': '🏪',
   '제2종근린생활시설': '🏬',
   '업무시설':          '🏗️',
+  '교육시설':          '🏫',
+  '의료시설':          '🏥',
+  '숙박시설':          '🏨',
+  '공장':             '🏭',
+  '창고시설':          '📦',
+  '물류시설':          '🚚',
 }
 
-function EntryGuide({ pendingUse, onPendingUseSelect }) {
+function EntryGuide({ pendingUse, onPendingUseSelect, useOptions }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
@@ -760,7 +784,7 @@ function EntryGuide({ pendingUse, onPendingUseSelect }) {
             </span>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {USE_OPTIONS.map(use => {
+            {useOptions.map(use => {
               const selected = pendingUse === use
               return (
                 <button
