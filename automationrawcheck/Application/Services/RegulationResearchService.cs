@@ -37,6 +37,7 @@ public sealed class RegulationResearchService : IRegulationResearchService
         var target = NormalizeOfficialLawTarget(request.Target);
         var query = request.Query?.Trim() ?? string.Empty;
         var display = Math.Clamp(request.Display <= 0 ? 20 : request.Display, 1, 100);
+        var candidateQueries = BuildOfficialLawCandidateQueries(query);
 
         if (!IsAnyOfficialLawSearchConfigured())
         {
@@ -58,11 +59,27 @@ public sealed class RegulationResearchService : IRegulationResearchService
             if (IsOfficialLawApiConfigured())
             {
                 var client = _httpClientFactory.CreateClient(LawHttpClientName);
-                var url = $"{_options.OfficialLawApiBaseUrl.TrimEnd('/')}/lawSearch.do?OC={Uri.EscapeDataString(_options.OfficialLawApiOc)}&target={Uri.EscapeDataString(target)}&type=JSON&query={Uri.EscapeDataString(query)}&display={display}";
-                using var response = await client.GetAsync(url, ct).ConfigureAwait(false);
-                var body = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+                var items = new List<OfficialLawSearchItemDto>();
+                string? lastBody = null;
+                int? lastStatusCode = null;
 
-                if (!response.IsSuccessStatusCode)
+                foreach (var candidateQuery in candidateQueries)
+                {
+                    var url = $"{_options.OfficialLawApiBaseUrl.TrimEnd('/')}/lawSearch.do?OC={Uri.EscapeDataString(_options.OfficialLawApiOc)}&target={Uri.EscapeDataString(target)}&type=JSON&query={Uri.EscapeDataString(candidateQuery)}&display={display}";
+                    using var response = await client.GetAsync(url, ct).ConfigureAwait(false);
+                    var body = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+                    lastBody = body;
+                    lastStatusCode = (int)response.StatusCode;
+
+                    if (!response.IsSuccessStatusCode)
+                        continue;
+
+                    MergeOfficialLawItems(items, ParseOfficialLawSearch(body, target));
+                    if (items.Count >= display)
+                        break;
+                }
+
+                if (items.Count == 0 && lastStatusCode is not null && lastStatusCode >= 400)
                 {
                     return new OfficialLawSearchResponseDto
                     {
@@ -71,30 +88,30 @@ public sealed class RegulationResearchService : IRegulationResearchService
                         IsConfigured = true,
                         SummaryLines =
                         [
-                            $"official_law_api_http={(int)response.StatusCode}",
-                            Clip(body) ?? "empty_response"
+                            $"official_law_api_http={lastStatusCode}",
+                            Clip(lastBody) ?? "empty_response"
                         ]
                     };
                 }
 
-                var items = ParseOfficialLawSearch(body, target);
                 return new OfficialLawSearchResponseDto
                 {
                     Target = target,
                     Query = query,
                     IsConfigured = true,
-                    Items = items,
+                    Items = items.Take(display).ToList(),
                     SummaryLines =
                     [
                         "searchSource=law.go.kr_drf",
                         $"target={target}",
                         $"query={query}",
-                        $"items={items.Count}"
+                        $"candidateQueries={candidateQueries.Count}",
+                        $"items={Math.Min(items.Count, display)}"
                     ]
                 };
             }
 
-            var publicItems = await SearchOfficialLawViaPublicDataAsync(query, target, display, ct).ConfigureAwait(false);
+            var publicItems = await SearchOfficialLawViaPublicDataAsync(candidateQueries, target, display, ct).ConfigureAwait(false);
             return new OfficialLawSearchResponseDto
             {
                 Target = target,
@@ -106,6 +123,7 @@ public sealed class RegulationResearchService : IRegulationResearchService
                     "searchSource=data.go.kr_serviceKey",
                     $"target={target}",
                     $"query={query}",
+                    $"candidateQueries={candidateQueries.Count}",
                     $"items={publicItems.Count}"
                 ]
             };
@@ -390,22 +408,114 @@ public sealed class RegulationResearchService : IRegulationResearchService
         }
     }
 
-    private async Task<List<OfficialLawSearchItemDto>> SearchOfficialLawViaPublicDataAsync(string query, string target, int display, CancellationToken ct)
+    private async Task<List<OfficialLawSearchItemDto>> SearchOfficialLawViaPublicDataAsync(IReadOnlyList<string> candidateQueries, string target, int display, CancellationToken ct)
     {
         var client = _httpClientFactory.CreateClient(HttpClientName);
-        var url =
-            $"{_options.OfficialLawPublicDataBaseUrl.TrimEnd('/')}/lawSearchList.do" +
-            $"?serviceKey={Uri.EscapeDataString(_options.OfficialLawPublicDataServiceKey)}" +
-            $"&target={Uri.EscapeDataString(target)}" +
-            $"&query={Uri.EscapeDataString(query)}" +
-            $"&numOfRows={display}&pageNo=1";
+        var items = new List<OfficialLawSearchItemDto>();
 
-        using var response = await client.GetAsync(url, ct).ConfigureAwait(false);
-        var body = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
-        if (!response.IsSuccessStatusCode)
-            return [];
+        foreach (var query in candidateQueries)
+        {
+            var url =
+                $"{_options.OfficialLawPublicDataBaseUrl.TrimEnd('/')}/lawSearchList.do" +
+                $"?serviceKey={Uri.EscapeDataString(_options.OfficialLawPublicDataServiceKey)}" +
+                $"&target={Uri.EscapeDataString(target)}" +
+                $"&query={Uri.EscapeDataString(query)}" +
+                $"&numOfRows={display}&pageNo=1";
 
-        return ParseOfficialLawSearchXml(body, target);
+            using var response = await client.GetAsync(url, ct).ConfigureAwait(false);
+            var body = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
+                continue;
+
+            MergeOfficialLawItems(items, ParseOfficialLawSearchXml(body, target));
+            if (items.Count >= display)
+                break;
+        }
+
+        return items.Take(display).ToList();
+    }
+
+    private static List<string> BuildOfficialLawCandidateQueries(string query)
+    {
+        var normalized = (query ?? string.Empty).Trim();
+        var candidates = new List<string>();
+        void Add(string? value)
+        {
+            var trimmed = value?.Trim();
+            if (!string.IsNullOrWhiteSpace(trimmed) && !candidates.Contains(trimmed, StringComparer.OrdinalIgnoreCase))
+                candidates.Add(trimmed);
+        }
+
+        Add(normalized);
+
+        if (normalized.Contains("주차", StringComparison.OrdinalIgnoreCase))
+        {
+            Add("주차장법");
+            Add("주차장법 시행령");
+            Add("주차장법 시행규칙");
+            Add("부설주차장 설치기준");
+        }
+
+        if (normalized.Contains("직통계단", StringComparison.OrdinalIgnoreCase) ||
+            normalized.Contains("피난", StringComparison.OrdinalIgnoreCase))
+        {
+            Add("건축법");
+            Add("건축법 시행령");
+            Add("건축법 시행규칙");
+            Add("직통계단");
+            Add("피난계단");
+        }
+
+        if (normalized.Contains("건폐율", StringComparison.OrdinalIgnoreCase) ||
+            normalized.Contains("용적률", StringComparison.OrdinalIgnoreCase))
+        {
+            Add("국토의 계획 및 이용에 관한 법률");
+            Add("국토의 계획 및 이용에 관한 법률 시행령");
+            Add("건축법");
+        }
+
+        if (normalized.Contains("건축법", StringComparison.OrdinalIgnoreCase))
+        {
+            Add("건축법");
+            Add("건축법 시행령");
+            Add("건축법 시행규칙");
+        }
+
+        if (normalized.Contains("지구단위계획", StringComparison.OrdinalIgnoreCase))
+        {
+            Add("국토의 계획 및 이용에 관한 법률");
+            Add("국토의 계획 및 이용에 관한 법률 시행령");
+            Add("지구단위계획");
+        }
+
+        if (normalized.Contains("소방", StringComparison.OrdinalIgnoreCase) ||
+            normalized.Contains("방화", StringComparison.OrdinalIgnoreCase))
+        {
+            Add("소방시설 설치 및 관리에 관한 법률");
+            Add("화재의 예방 및 안전관리에 관한 법률");
+            Add("건축법");
+        }
+
+        if (candidates.Count == 1)
+        {
+            Add($"{normalized} 건축법");
+            Add($"{normalized} 건축법 시행령");
+        }
+
+        return candidates;
+    }
+
+    private static void MergeOfficialLawItems(List<OfficialLawSearchItemDto> destination, IEnumerable<OfficialLawSearchItemDto> additions)
+    {
+        foreach (var item in additions)
+        {
+            var exists = destination.Any(existing =>
+                string.Equals(existing.Id, item.Id, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(existing.Target, item.Target, StringComparison.OrdinalIgnoreCase));
+
+            if (!exists)
+                destination.Add(item);
+        }
     }
 
     private static List<OfficialLawSearchItemDto> ParseOfficialLawSearchXml(string xml, string target)
