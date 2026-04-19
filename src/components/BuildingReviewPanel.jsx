@@ -844,7 +844,10 @@ function AiAssistWidget({ status, preview, loading, error, query, onQueryChange,
       parsedRunOutput = null
     }
   }
-  const fallbackResponseText = parsedRunOutput?.responseText
+  const fallbackResponseText = parsedRunOutput?.answer ?? parsedRunOutput?.responseText
+  const relatedLaws = Array.isArray(parsedRunOutput?.relatedLaws) ? parsedRunOutput.relatedLaws : []
+  const searchKeywords = Array.isArray(parsedRunOutput?.searchKeywords) ? parsedRunOutput.searchKeywords : []
+  const manualReviewNeeded = Array.isArray(parsedRunOutput?.manualReviewNeeded) ? parsedRunOutput.manualReviewNeeded : []
 
   return (
     <div style={{ marginTop: 10, border: '1px solid #dbeafe', borderRadius: 10, background: '#f8fbff', padding: '12px 14px' }}>
@@ -950,6 +953,45 @@ function AiAssistWidget({ status, preview, loading, error, query, onQueryChange,
           {fallbackResponseText && (
             <div style={{ marginTop: 8, padding: '10px 11px', borderRadius: 8, background: '#eff6ff', border: '1px solid #bfdbfe', fontSize: 12, color: '#1e293b', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
               {fallbackResponseText}
+            </div>
+          )}
+
+          {relatedLaws.length > 0 && (
+            <div style={{ marginTop: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>관련 법령</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {relatedLaws.map((law, index) => (
+                  <span key={`${law}-${index}`} style={{ fontSize: 10, padding: '3px 7px', borderRadius: 999, background: '#f8fafc', border: '1px solid #cbd5e1', color: '#334155' }}>
+                    {law}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {searchKeywords.length > 0 && (
+            <div style={{ marginTop: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>추천 검색어</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {searchKeywords.map((keyword, index) => (
+                  <span key={`${keyword}-${index}`} style={{ fontSize: 10, padding: '3px 7px', borderRadius: 999, background: '#eef2ff', border: '1px solid #c7d2fe', color: '#4338ca' }}>
+                    {keyword}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {manualReviewNeeded.length > 0 && (
+            <div style={{ marginTop: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>추가 확인 필요</div>
+              <div style={{ display: 'grid', gap: 4 }}>
+                {manualReviewNeeded.map((item, index) => (
+                  <div key={`${item}-${index}`} style={{ fontSize: 11, color: '#475569', lineHeight: 1.6 }}>
+                    • {item}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
