@@ -159,13 +159,16 @@ export default function RegulationMapView({ selectedCoordinate, result, loading,
         />
 
         {visibleGeometries.map((geometry) => {
+          const isParcelBoundary = geometry.key === 'parcel_boundary'
           const popup = (
             <Popup>
               <div style={{ maxWidth: 280 }}>
                 <div style={{ fontWeight: 700, marginBottom: 6 }}>{geometry.label}</div>
                 <div style={{ fontSize: 12, color: '#475569', marginBottom: 6 }}>{geometry.legendGroupLabel}</div>
                 <div style={{ fontSize: 13, lineHeight: 1.5 }}>
-                  {geometry.geometryType === 'line'
+                  {isParcelBoundary
+                    ? '\uD604\uC7AC \uC88C\uD45C\uB97C \uD3EC\uD568\uD558\uB294 V-World \uD544\uC9C0 \uACBD\uACC4 \uD6C4\uBCF4\uC785\uB2C8\uB2E4. \uC2E4\uC81C \uD5C8\uAC00 \uB3C4\uC11C\uC640 \uB300\uC870\uD558\uC5EC \uD544\uC9C0 \uD569\uBCC1\u00B7\uBD84\uD560\u00B7\uB3C4\uB85C \uC9C0\uC815 \uC5EC\uBD80\uB97C \uD55C \uBC88 \uB354 \uD655\uC778\uD558\uC138\uC694.'
+                    : geometry.geometryType === 'line'
                     ? '\uB3C4\uB85C\u00B7\uAD50\uD1B5 \uACC4\uC5F4\uCC98\uB7FC \uC120\uD615 \uC131\uACA9\uC774 \uAC15\uD55C \uB3C4\uC2DC\uACC4\uD68D\uC2DC\uC124\uC785\uB2C8\uB2E4. \uB300\uC9C0\uC640\uC758 \uC815\uD655\uD55C \uC911\uCCA9 \uD310\uB2E8\uC740 \uB3C4\uBA74\uACFC \uD568\uAED8 \uD655\uC778\uD558\uB294 \uAC83\uC774 \uC548\uC804\uD569\uB2C8\uB2E4.'
                     : 'SHP \uB610\uB294 \uC678\uBD80 \uACC4\uD68D \uB808\uC774\uC5B4\uC5D0\uC11C \uC77D\uC740 \uB300\uD45C \uAD6C\uC5ED\uC785\uB2C8\uB2E4. \uD544\uC9C0 \uACBD\uACC4\uC640 \uC644\uC804\uD788 \uC77C\uCE58\uD558\uB294 \uC9C0\uC801\uB3C4\uB294 \uC544\uB2C8\uBBC0\uB85C \uCD5C\uC885 \uD310\uB2E8 \uC804 \uBCC4\uB3C4 \uD655\uC778\uC774 \uD544\uC694\uD569\uB2C8\uB2E4.'}
                 </div>
@@ -180,7 +183,7 @@ export default function RegulationMapView({ selectedCoordinate, result, loading,
                 positions={geometry.positions}
                 pathOptions={{
                   color: geometry.strokeColor,
-                  weight: 4,
+                  weight: isParcelBoundary ? 5 : 4,
                   opacity: 0.9,
                   dashArray: '8 6',
                 }}
@@ -198,7 +201,8 @@ export default function RegulationMapView({ selectedCoordinate, result, loading,
                 color: geometry.strokeColor,
                 fillColor: geometry.fillColor,
                 fillOpacity: geometry.fillOpacity,
-                weight: 2,
+                weight: isParcelBoundary ? 3 : 2,
+                dashArray: isParcelBoundary ? '5 4' : undefined,
               }}
             >
               {popup}

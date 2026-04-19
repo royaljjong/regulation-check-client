@@ -81,25 +81,46 @@ export default function BuildingReviewPanel({ selectedUse, coordinate, onBuildin
   const [hintOpen, setHintOpen] = useState(false)
   const [hintForm, setHintForm] = useState({})
   const [aiStatus, setAiStatus] = useState(null)
+  const [researchStatus, setResearchStatus] = useState(null)
   const [aiPreview, setAiPreview] = useState(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState(null)
+  const [aiQuery, setAiQuery] = useState('')
+  const [aiRunResult, setAiRunResult] = useState(null)
+  const [aiRunLoading, setAiRunLoading] = useState(false)
+  const [officialLawQuery, setOfficialLawQuery] = useState('')
+  const [officialLawSearch, setOfficialLawSearch] = useState(null)
+  const [officialLawBody, setOfficialLawBody] = useState(null)
+  const [officialLawLoading, setOfficialLawLoading] = useState(false)
+  const [officialLawError, setOfficialLawError] = useState(null)
 
   useEffect(() => {
     let cancelled = false
 
-    async function loadAiStatus() {
+    async function loadStatuses() {
       try {
-        const res = await fetchApi('/api/regulation-check/research/ai-assist/status')
-        if (!res.ok) throw new Error('status-error')
-        const payload = await res.json()
-        if (!cancelled) setAiStatus(payload)
+        const [aiRes, researchRes] = await Promise.all([
+          fetchApi('/api/regulation-check/research/ai-assist/status'),
+          fetchApi('/api/regulation-check/research/status'),
+        ])
+        if (!aiRes.ok || !researchRes.ok) throw new Error('status-error')
+        const [aiPayload, researchPayload] = await Promise.all([
+          aiRes.json(),
+          researchRes.json(),
+        ])
+        if (!cancelled) {
+          setAiStatus(aiPayload)
+          setResearchStatus(researchPayload)
+        }
       } catch {
-        if (!cancelled) setAiStatus(null)
+        if (!cancelled) {
+          setAiStatus(null)
+          setResearchStatus(null)
+        }
       }
     }
 
-    loadAiStatus()
+    loadStatuses()
     return () => { cancelled = true }
   }, [])
 
@@ -138,6 +159,10 @@ export default function BuildingReviewPanel({ selectedUse, coordinate, onBuildin
     if (!selectedUse || !coordinate) {
       setData(null)
       setAiPreview(null)
+      setAiRunResult(null)
+      setOfficialLawQuery('')
+      setOfficialLawSearch(null)
+      setOfficialLawBody(null)
       return
     }
     setFormValues({})
@@ -145,6 +170,14 @@ export default function BuildingReviewPanel({ selectedUse, coordinate, onBuildin
     setHintOpen(false)
     fetchReview({}, null)
   }, [selectedUse, coordinate?.lat, coordinate?.lon, fetchReview])
+
+  useEffect(() => {
+    if (!data) return
+
+    const zoningLabel = data?.zoning?.zoneName
+    const suggested = [selectedUse, zoningLabel, '건축법'].filter(Boolean).join(' ')
+    setOfficialLawQuery(prev => prev || suggested)
+  }, [data, selectedUse])
 
   useEffect(() => {
     if (!selectedUse || !data) {
@@ -196,6 +229,104 @@ export default function BuildingReviewPanel({ selectedUse, coordinate, onBuildin
     return () => { cancelled = true }
   }, [selectedUse, data])
 
+  const handleAiRun = async () => {
+    if (!selectedUse || !data) return
+
+    const prompt = aiQuery.trim() || '현재 프로젝트에서 토지와 수치만으로 확인 가능한 주요 법규와 추가 확인 필요 항목을 요약해줘.'
+    const requestBody = {
+      selectedUse,
+      userPrompt: prompt,
+      useProfile: data.useProfile ?? null,
+      planningContext: {
+        reviewLevel: data.reviewLevel,
+        zoning: data.zoning ?? null,
+        checklist: data.projectChecklist ?? data.checklist ?? null,
+        activeRuleBundles: data.activeRuleBundles ?? [],
+        developmentActionApiStatus: data.developmentActionApiStatus ?? null,
+        applicableLawSummary: data.applicableLaws?.summaryLines ?? [],
+        reviewTriggers: data.reviewTriggers ?? [],
+      },
+      reviewItems: data.reviewItems ?? [],
+      tasks: data.tasks ?? [],
+      manualReviewSet: data.manualReviews ?? [],
+      ordinanceRegion: data.location?.resolvedAddress ?? data.location?.inputAddress ?? null,
+    }
+
+    setAiRunLoading(true)
+    setAiError(null)
+    try {
+      const res = await fetchApi('/api/regulation-check/research/ai-assist/run', {
+        method: 'POST',
+        headers: JSON_HEADERS,
+        body: JSON.stringify(requestBody),
+      })
+      if (!res.ok) throw new Error('run-error')
+      const payload = await res.json()
+      setAiRunResult(payload)
+    } catch {
+      setAiRunResult(null)
+      setAiError('AI 보조 기능 실행에 실패했습니다.')
+    } finally {
+      setAiRunLoading(false)
+    }
+  }
+
+  const handleOfficialLawSearch = async () => {
+    const query = officialLawQuery.trim()
+    if (!query) return
+
+    setOfficialLawLoading(true)
+    setOfficialLawError(null)
+    setOfficialLawBody(null)
+
+    try {
+      const res = await fetchApi('/api/regulation-check/research/official-law/search', {
+        method: 'POST',
+        headers: JSON_HEADERS,
+        body: JSON.stringify({
+          query,
+          target: 'law',
+          display: 10,
+        }),
+      })
+      if (!res.ok) throw new Error('official-law-search-error')
+      const payload = await res.json()
+      setOfficialLawSearch(payload)
+    } catch {
+      setOfficialLawSearch(null)
+      setOfficialLawError('공식 법령 검색을 불러오지 못했습니다.')
+    } finally {
+      setOfficialLawLoading(false)
+    }
+  }
+
+  const handleOfficialLawBody = async (item) => {
+    if (!item) return
+
+    setOfficialLawLoading(true)
+    setOfficialLawError(null)
+
+    try {
+      const res = await fetchApi('/api/regulation-check/research/official-law/body', {
+        method: 'POST',
+        headers: JSON_HEADERS,
+        body: JSON.stringify({
+          target: item.target ?? 'law',
+          id: item.id ?? null,
+          mst: item.mst ?? null,
+        }),
+      })
+      if (!res.ok) throw new Error('official-law-body-error')
+      const payload = await res.json()
+      setOfficialLawBody(payload)
+    } catch {
+      setOfficialLawBody(null)
+      setOfficialLawError('법령 본문을 불러오지 못했습니다.')
+    } finally {
+      setOfficialLawLoading(false)
+    }
+  }
+
   const handleHintSubmit = (e) => {
     e.preventDefault()
     const merged = { ...formValues, ...hintForm }
@@ -243,7 +374,29 @@ export default function BuildingReviewPanel({ selectedUse, coordinate, onBuildin
       {!loading && !error && data && (
         <>
           <SummaryBar level={level} zoning={zoning} statusCount={statusCount} summary={summary} items={sortedItems} selectedUse={selectedUse} />
-          <AiAssistCard status={aiStatus} preview={aiPreview} loading={aiLoading} error={aiError} />
+          <ApplicableLawPanel catalog={data?.applicableLaws} triggers={data?.reviewTriggers} />
+          <OfficialLawWidget
+            status={researchStatus}
+            query={officialLawQuery}
+            onQueryChange={setOfficialLawQuery}
+            onSearch={handleOfficialLawSearch}
+            searchResult={officialLawSearch}
+            bodyResult={officialLawBody}
+            loading={officialLawLoading}
+            error={officialLawError}
+            onSelectItem={handleOfficialLawBody}
+          />
+          <AiAssistWidget
+            status={aiStatus}
+            preview={aiPreview}
+            loading={aiLoading}
+            error={aiError}
+            query={aiQuery}
+            onQueryChange={setAiQuery}
+            onRun={handleAiRun}
+            runLoading={aiRunLoading}
+            runResult={aiRunResult}
+          />
 
           {sortedItems.length === 0 ? (
             <div style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center', padding: '12px 0' }}>
@@ -569,6 +722,315 @@ function AiAssistCard({ status, preview, loading, error }) {
           ) : (
             <div style={{ fontSize: 11, color: '#64748b' }}>현재 표시할 Gemma4 미리보기 힌트가 없습니다.</div>
           )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ApplicableLawPanel({ catalog, triggers }) {
+  if (!catalog && (!triggers || triggers.length === 0)) return null
+
+  return (
+    <div style={{ marginTop: 10, border: '1px solid #e2e8f0', borderRadius: 10, background: '#fff', padding: '12px 14px' }}>
+      <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', marginBottom: 6 }}>
+        적용 가능 법규
+      </div>
+      <div style={{ fontSize: 11, color: '#64748b', lineHeight: 1.6 }}>
+        토지와 입력 수치만으로 확인 가능한 법규를 우선 정리하고, 추가 입력 또는 수동 검토가 필요한 항목은 별도로 표시합니다.
+      </div>
+
+      {catalog?.summaryLines?.length > 0 && (
+        <div style={{ marginTop: 10, display: 'grid', gap: 4 }}>
+          {catalog.summaryLines.map((line, index) => (
+            <div key={`${line}-${index}`} style={{ fontSize: 11, color: '#334155', lineHeight: 1.6 }}>
+              • {line}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {catalog?.sections?.length > 0 && (
+        <div style={{ marginTop: 10, display: 'grid', gap: 8 }}>
+          {catalog.sections.map((section) => (
+            <div key={section.sectionId} style={{ border: '1px solid #e2e8f0', borderRadius: 8, background: '#f8fafc', padding: '10px 11px' }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: '#1e293b', marginBottom: 6 }}>
+                {section.title}
+              </div>
+              <div style={{ display: 'grid', gap: 6 }}>
+                {section.items.map((item) => (
+                  <div key={item.itemId} style={{ border: '1px solid #e5e7eb', borderRadius: 7, background: '#fff', padding: '9px 10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', flex: 1 }}>{item.title}</div>
+                      <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: '#eff6ff', color: '#1d4ed8', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                        {item.status || 'info'}
+                      </span>
+                    </div>
+                    {item.summary && (
+                      <div style={{ marginTop: 5, fontSize: 11, color: '#475569', lineHeight: 1.6 }}>
+                        {item.summary}
+                      </div>
+                    )}
+                    {(item.lawName || item.articleRef) && (
+                      <div style={{ marginTop: 5, fontSize: 10, color: '#64748b' }}>
+                        {[item.lawName, item.articleRef].filter(Boolean).join(' · ')}
+                      </div>
+                    )}
+                    {item.requiredInputs?.length > 0 && (
+                      <div style={{ marginTop: 5, fontSize: 10, color: '#64748b' }}>
+                        필요 입력: {item.requiredInputs.join(' / ')}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {triggers?.length > 0 && (
+        <div style={{ marginTop: 10 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: '#7c2d12', marginBottom: 6 }}>추가 검토 트리거</div>
+          <div style={{ display: 'grid', gap: 6 }}>
+            {triggers.map((trigger) => (
+              <div key={trigger.triggerId} style={{ border: '1px solid #fed7aa', borderRadius: 7, background: '#fff7ed', padding: '9px 10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#9a3412', flex: 1 }}>{trigger.title}</div>
+                  <span style={{ fontSize: 10, color: '#9a3412', fontWeight: 700 }}>{trigger.status}</span>
+                </div>
+                <div style={{ marginTop: 4, fontSize: 11, color: '#7c2d12', lineHeight: 1.6 }}>{trigger.basis}</div>
+                {trigger.requiredInputs?.length > 0 && (
+                  <div style={{ marginTop: 4, fontSize: 10, color: '#9a3412' }}>
+                    추가 입력: {trigger.requiredInputs.join(' / ')}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function AiAssistWidget({ status, preview, loading, error, query, onQueryChange, onRun, runLoading, runResult }) {
+  const configuredLabel = status?.isConfigured ? '연결 준비 완료' : '미설정'
+  const configuredColor = status?.isConfigured ? '#166534' : '#92400e'
+  const configuredBg = status?.isConfigured ? '#f0fdf4' : '#fef3c7'
+
+  return (
+    <div style={{ marginTop: 10, border: '1px solid #dbeafe', borderRadius: 10, background: '#f8fbff', padding: '12px 14px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 800, color: '#1d4ed8', marginBottom: 4 }}>AI 보조 기능</div>
+          <div style={{ fontSize: 11, color: '#64748b', lineHeight: 1.6 }}>
+            법규 위치 안내, 조문 번호 안내, 검색 키워드 추천, 조례 탐색, 누락 검토 리마인드와 함께 질문형 법규 보조 응답을 제공합니다.
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
+          {status && (
+            <>
+              <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: configuredBg, color: configuredColor, fontWeight: 700 }}>
+                {configuredLabel}
+              </span>
+              <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: '#e0f2fe', color: '#0369a1', fontWeight: 700 }}>
+                {status.provider ?? 'gemma4'} · {status.executionMode ?? 'preview'}
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {status?.summaryLines?.length > 0 && (
+        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {status.summaryLines.map((line, index) => (
+            <div key={`${line}-${index}`} style={{ fontSize: 11, color: '#475569' }}>{line}</div>
+          ))}
+        </div>
+      )}
+
+      <div style={{ marginTop: 10, border: '1px solid #dbeafe', borderRadius: 8, background: '#fff', padding: '10px 11px' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>법규 질문하기</div>
+        <textarea
+          value={query}
+          onChange={e => onQueryChange?.(e.target.value)}
+          placeholder="예: 이 대지에서 토지와 수치만으로 확인 가능한 법규를 정리해줘. 지구단위계획에서 우선 봐야 할 항목도 알려줘."
+          style={{ width: '100%', minHeight: 88, boxSizing: 'border-box', resize: 'vertical', padding: '9px 10px', borderRadius: 8, border: '1px solid #bfdbfe', fontSize: 12, lineHeight: 1.6, outline: 'none' }}
+        />
+        <div style={{ marginTop: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+          <div style={{ fontSize: 10, color: '#64748b', lineHeight: 1.5 }}>
+            수치 계산이나 허용/불허 확정 판정이 아니라, 관련 법규 설명과 검색·검토 보조 용도로 답변합니다.
+          </div>
+          <button
+            type="button"
+            onClick={onRun}
+            disabled={runLoading}
+            style={{ flexShrink: 0, padding: '8px 12px', borderRadius: 7, border: 'none', background: runLoading ? '#93c5fd' : '#2563eb', color: '#fff', fontSize: 11, fontWeight: 700, cursor: runLoading ? 'default' : 'pointer' }}
+          >
+            {runLoading ? '질의 중...' : 'AI 답변 받기'}
+          </button>
+        </div>
+      </div>
+
+      {loading && <div style={{ marginTop: 10, fontSize: 11, color: '#64748b' }}>AI 보조 기능 미리보기를 생성 중입니다...</div>}
+      {!loading && error && <div style={{ marginTop: 10, fontSize: 11, color: '#b91c1c' }}>{error}</div>}
+
+      {!loading && preview && (
+        <div style={{ marginTop: 10, display: 'grid', gap: 8 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: '#eff6ff', color: '#1d4ed8', fontWeight: 700 }}>{preview.provider ?? 'gemma4'}</span>
+            <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: '#eff6ff', color: '#1d4ed8', fontWeight: 700 }}>{preview.model ?? 'gemma4'}</span>
+            <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: '#eff6ff', color: '#1d4ed8', fontWeight: 700 }}>{preview.executionMode ?? 'preview'}</span>
+          </div>
+
+          {preview.hints?.length > 0 ? (
+            <div style={{ display: 'grid', gap: 6 }}>
+              {preview.hints.map((hint, index) => (
+                <div key={`${hint.title ?? 'hint'}-${index}`} style={{ border: '1px solid #dbeafe', borderRadius: 8, background: '#fff', padding: '10px 11px' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>{hint.title ?? `안내 ${index + 1}`}</div>
+                  {hint.message && <div style={{ fontSize: 11, color: '#475569', lineHeight: 1.6, marginBottom: 4 }}>{hint.message}</div>}
+                  {hint.suggestedKeywords?.length > 0 && <div style={{ fontSize: 10, color: '#64748b' }}>검색 키워드: {hint.suggestedKeywords.join(' / ')}</div>}
+                  {hint.linkedCardIds?.length > 0 && <div style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>연결 카드: {hint.linkedCardIds.join(' / ')}</div>}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ fontSize: 11, color: '#64748b' }}>현재 표시할 AI 보조 기능 미리보기 힌트가 없습니다.</div>
+          )}
+        </div>
+      )}
+
+      {runResult && (
+        <div style={{ marginTop: 10, border: '1px solid #bfdbfe', borderRadius: 8, background: '#fff', padding: '10px 11px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a' }}>AI 응답</div>
+            <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: runResult.success ? '#ecfdf5' : '#fef2f2', color: runResult.success ? '#166534' : '#991b1b', fontWeight: 700 }}>
+              {runResult.success ? '응답 수신' : '응답 실패'}
+            </span>
+          </div>
+
+          {runResult.summaryLines?.length > 0 && (
+            <div style={{ marginTop: 6, display: 'grid', gap: 4 }}>
+              {runResult.summaryLines.map((line, index) => (
+                <div key={`${line}-${index}`} style={{ fontSize: 11, color: '#334155', lineHeight: 1.6 }}>
+                  • {line}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {runResult.structuredOutputJson && (
+            <pre style={{ marginTop: 8, padding: '10px', borderRadius: 8, background: '#0f172a', color: '#e2e8f0', fontSize: 10, lineHeight: 1.6, overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
+              {runResult.structuredOutputJson}
+            </pre>
+          )}
+
+          {!runResult.structuredOutputJson && runResult.rawResponse && (
+            <pre style={{ marginTop: 8, padding: '10px', borderRadius: 8, background: '#0f172a', color: '#e2e8f0', fontSize: 10, lineHeight: 1.6, overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
+              {runResult.rawResponse}
+            </pre>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function OfficialLawWidget({ status, query, onQueryChange, onSearch, searchResult, bodyResult, loading, error, onSelectItem }) {
+  const configured = status?.officialLawApiConfigured
+  const configuredLabel = configured ? '공식 법령 검색 가능' : '법제처 OC 필요'
+  const configuredColor = configured ? '#166534' : '#92400e'
+  const configuredBg = configured ? '#f0fdf4' : '#fef3c7'
+
+  return (
+    <div style={{ marginTop: 10, border: '1px solid #dbeafe', borderRadius: 10, background: '#f8fbff', padding: '12px 14px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 800, color: '#1d4ed8', marginBottom: 4 }}>공식 법령 검색</div>
+          <div style={{ fontSize: 11, color: '#64748b', lineHeight: 1.6 }}>
+            법제처 API가 연결되면 선택한 용도와 지역 기준으로 관련 법령 제목과 본문을 직접 확인할 수 있습니다.
+          </div>
+        </div>
+        <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: configuredBg, color: configuredColor, fontWeight: 700 }}>
+          {configuredLabel}
+        </span>
+      </div>
+
+      {status?.summaryLines?.length > 0 && (
+        <div style={{ marginTop: 8, display: 'grid', gap: 4 }}>
+          {status.summaryLines.map((line, index) => (
+            <div key={`${line}-${index}`} style={{ fontSize: 11, color: '#475569' }}>{line}</div>
+          ))}
+        </div>
+      )}
+
+      <div style={{ marginTop: 10, border: '1px solid #dbeafe', borderRadius: 8, background: '#fff', padding: '10px 11px' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>법령 키워드 검색</div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input
+            value={query}
+            onChange={e => onQueryChange?.(e.target.value)}
+            placeholder="예: 제3종일반주거지역 제1종근린생활시설 건축법"
+            style={{ ...inputStyle, flex: 1 }}
+          />
+          <button
+            type="button"
+            onClick={onSearch}
+            disabled={loading}
+            style={{ flexShrink: 0, padding: '8px 12px', borderRadius: 7, border: 'none', background: loading ? '#93c5fd' : '#2563eb', color: '#fff', fontSize: 11, fontWeight: 700, cursor: loading ? 'default' : 'pointer' }}
+          >
+            {loading ? '검색 중..' : '검색'}
+          </button>
+        </div>
+        {!configured && (
+          <div style={{ marginTop: 8, fontSize: 10, color: '#92400e', lineHeight: 1.5 }}>
+            현재는 법제처 DRF용 OC 값이 없어 검색 API가 실제로 동작하지 않을 수 있습니다. 구조는 연결되어 있습니다.
+          </div>
+        )}
+      </div>
+
+      {error && <div style={{ marginTop: 10, fontSize: 11, color: '#b91c1c' }}>{error}</div>}
+
+      {searchResult?.items?.length > 0 && (
+        <div style={{ marginTop: 10, display: 'grid', gap: 6 }}>
+          {searchResult.items.map((item) => (
+            <div key={`${item.target}-${item.id}-${item.mst ?? 'no-mst'}`} style={{ border: '1px solid #dbeafe', borderRadius: 8, background: '#fff', padding: '10px 11px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a' }}>{item.title}</div>
+                  {item.summary && <div style={{ marginTop: 4, fontSize: 11, color: '#475569', lineHeight: 1.6 }}>{item.summary}</div>}
+                  <div style={{ marginTop: 4, fontSize: 10, color: '#64748b' }}>
+                    {[item.department, item.promulgationDate].filter(Boolean).join(' / ')}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onSelectItem?.(item)}
+                  disabled={loading}
+                  style={{ flexShrink: 0, padding: '6px 10px', borderRadius: 6, border: '1px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', fontSize: 10, fontWeight: 700, cursor: loading ? 'default' : 'pointer' }}
+                >
+                  본문 보기
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {bodyResult?.rawBody && (
+        <div style={{ marginTop: 10, border: '1px solid #bfdbfe', borderRadius: 8, background: '#fff', padding: '10px 11px' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>
+            {bodyResult.title ?? '법령 본문'}
+          </div>
+          {bodyResult.link && (
+            <a href={bodyResult.link} target="_blank" rel="noreferrer" style={{ display: 'inline-block', marginBottom: 8, fontSize: 10, color: '#2563eb' }}>
+              법제처 원문 열기
+            </a>
+          )}
+          <pre style={{ margin: 0, padding: '10px', borderRadius: 8, background: '#0f172a', color: '#e2e8f0', fontSize: 10, lineHeight: 1.6, overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
+            {bodyResult.rawBody}
+          </pre>
         </div>
       )}
     </div>
