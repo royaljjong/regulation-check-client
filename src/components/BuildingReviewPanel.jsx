@@ -190,14 +190,13 @@ export default function BuildingReviewPanel({ selectedUse, coordinate, onBuildin
       useProfile: data.useProfile ?? null,
       planningContext: {
         reviewLevel: data.reviewLevel,
-        zoning: data.zoning ?? null,
-        checklist: data.projectChecklist ?? null,
-        activeRuleBundles: data.activeRuleBundles ?? [],
-        developmentActionApiStatus: data.developmentActionApiStatus ?? null,
+        zoning: data.zoning ? { zoneName: data.zoning.zoneName, districtUnitPlan: data.zoning.isDistrictUnitPlan } : null,
+        checklistSummary: data.projectChecklist?.summaryLines ?? [],
+        applicableLawSummary: data.applicableLaws?.summaryLines ?? [],
       },
-      reviewItems: data.reviewItems ?? [],
-      tasks: data.tasks ?? [],
-      manualReviewSet: data.manualReviews ?? [],
+      reviewItems: [],
+      tasks: [],
+      manualReviewSet: [],
       ordinanceRegion: data.location?.address ?? data.location?.regionName ?? null,
     }
 
@@ -235,40 +234,20 @@ export default function BuildingReviewPanel({ selectedUse, coordinate, onBuildin
     const prompt = aiQuery.trim() || '현재 프로젝트에서 토지와 수치만으로 확인 가능한 주요 법규와 추가 확인 필요 항목을 요약해줘.'
     setOfficialLawQuery(prompt)
     void runOfficialLawSearch(prompt)
-    const compactTasks = (data.tasks ?? []).slice(0, 8).map(task => ({
-      category: task.category,
-      title: task.title,
-      status: task.status,
-      reason: task.reason,
-      priority: task.priority,
-    }))
-    const compactReviewItems = (data.reviewItems ?? []).slice(0, 8).map(item => ({
-      title: item.title,
-      judgeStatus: item.judgeStatus,
-      judgeNote: item.judgeNote,
-      relatedLaws: item.relatedLaws?.slice?.(0, 4) ?? [],
-    }))
-    const compactManualReviews = (data.manualReviews ?? []).slice(0, 6).map(item => ({
-      title: item.title,
-      prompt: item.prompt,
-      searchHints: item.searchHints?.slice?.(0, 4) ?? [],
-    }))
     const requestBody = {
       selectedUse,
       userPrompt: prompt,
       useProfile: data.useProfile ?? null,
       planningContext: {
         reviewLevel: data.reviewLevel,
-        zoning: data.zoning ?? null,
-        checklist: data.projectChecklist ?? data.checklist ?? null,
-        activeRuleBundles: data.activeRuleBundles ?? [],
-        developmentActionApiStatus: data.developmentActionApiStatus ?? null,
+        zoning: data.zoning ? { zoneName: data.zoning.zoneName, districtUnitPlan: data.zoning.isDistrictUnitPlan } : null,
+        checklistSummary: data.projectChecklist?.summaryLines ?? data.checklist?.summaryLines ?? [],
         applicableLawSummary: data.applicableLaws?.summaryLines ?? [],
-        reviewTriggers: data.reviewTriggers ?? [],
+        reviewTriggerTitles: (data.reviewTriggers ?? []).map(trigger => trigger.title).slice(0, 8),
       },
-      reviewItems: compactReviewItems,
-      tasks: compactTasks,
-      manualReviewSet: compactManualReviews,
+      reviewItems: [],
+      tasks: [],
+      manualReviewSet: [],
       ordinanceRegion: data.location?.resolvedAddress ?? data.location?.inputAddress ?? null,
     }
 
