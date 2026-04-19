@@ -554,15 +554,15 @@ public sealed class RegulationCheckResponseDto
         }
 
         // ── 2. 중첩 규제 검토 ────────────────────────────────────────────
-        if (r.ExtraLayers.DevelopmentRestriction.IsInside)
+        if (r.ExtraLayers?.DevelopmentRestriction?.IsInside == true)
             list.Add("[제한] 개발제한구역 행위허가 및 예외 가능 여부 우선 검토 (개특법)");
         
-        if (r.ExtraLayers.DevelopmentActionRestriction.IsInside)
+        if (r.ExtraLayers?.DevelopmentActionRestriction?.IsInside == true)
             list.Add("[제한] 개발행위허가 제한 내용 및 기간 확인 (국토계획법 제63조)");
 
-        if (r.ExtraLayers.DistrictUnitPlan.IsInside)
+        if (r.ExtraLayers?.DistrictUnitPlan?.IsInside == true)
             list.Add("[계획] 지구단위계획 결정도 및 시행지침 상세 확인 (건축선, 형태 제한 등)");
-        else if (r.ExtraLayers.DistrictUnitPlan.Confidence == OverlayConfidenceLevel.DataUnavailable)
+        else if (r.ExtraLayers?.DistrictUnitPlan?.Confidence == OverlayConfidenceLevel.DataUnavailable)
             list.Add("[주의] 지구단위계획구역 여부 별도 확인 권장 (토지이음)");
 
         // ── 3. 공통 인허가 검토 ────────────────────────────────────────────

@@ -20,6 +20,9 @@ public sealed class AiAssistOptionsValidator : IValidateOptions<AiAssistOptions>
         if (string.IsNullOrWhiteSpace(options.Endpoint))
             failures.Add("AiAssist:Endpoint is required when Enabled=true.");
 
+        if (string.IsNullOrWhiteSpace(options.ApiKey))
+            failures.Add("AiAssist:ApiKey is required when Enabled=true.");
+
         if (string.IsNullOrWhiteSpace(options.ApiKeyHeaderName))
             failures.Add("AiAssist:ApiKeyHeaderName is required when Enabled=true.");
 

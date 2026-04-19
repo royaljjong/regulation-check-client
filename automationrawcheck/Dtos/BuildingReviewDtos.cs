@@ -342,6 +342,19 @@ public sealed class UseProfileSummaryDto
     public List<string> RuleBundles { get; init; } = new();
 }
 
+/// <summary>계획 용도 선택 UI용 UseProfile 목록 항목</summary>
+public sealed class UseProfileListItemDto
+{
+    public string Key { get; init; } = string.Empty;
+    public string DisplayName { get; init; } = string.Empty;
+    public string FunctionalGroup { get; init; } = string.Empty;
+    public string AutomationCoverage { get; init; } = string.Empty;
+    public List<string> RequiredStandardInputs { get; init; } = new();
+    public List<string> RequiredDetailedInputs { get; init; } = new();
+    public List<string> RuleBundles { get; init; } = new();
+    public List<string> LegalSearchHints { get; init; } = new();
+}
+
 /// <summary>활성 RuleBundle 요약 DTO</summary>
 public sealed class RuleBundleSummaryDto
 {

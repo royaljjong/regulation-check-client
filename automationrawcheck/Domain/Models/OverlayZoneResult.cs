@@ -1,65 +1,41 @@
-// =============================================================================
-// OverlayZoneResult.cs
-// 공간 레이어 중첩 판정 결과 도메인 모델
-// - 지구단위계획구역, 개발제한구역, 도시자연공원구역 등 중첩 레이어 판정에 사용합니다.
-// =============================================================================
-
 namespace AutomationRawCheck.Domain.Models;
 
-#region OverlayConfidenceLevel 열거형
-
 /// <summary>
-/// 오버레이 판정의 데이터 신뢰도를 나타냅니다.
-/// <para>
-/// 판정값(IsInside)과 별개로, 해당 판정이 얼마나 신뢰할 수 있는 데이터 기반인지 표현합니다.
-/// </para>
+/// Indicates how reliable an overlay match is.
 /// </summary>
 public enum OverlayConfidenceLevel
 {
     /// <summary>
-    /// 정상 판정. 데이터가 유효하고 결과를 신뢰할 수 있습니다.
+    /// A normal, directly matched overlay result.
     /// </summary>
     Normal,
 
     /// <summary>
-    /// 경계 근접. 좌표가 폴리곤 경계 200m 이내에 있어 정밀도 한계로 결과가 불확실합니다.
+    /// The coordinate is near a boundary and the result should be reviewed manually.
     /// </summary>
     NearBoundary,
 
     /// <summary>
-    /// 데이터 없음. SHP 파일 미로드 또는 필터 후 피처 없음 상태입니다.
-    /// 이 경우 IsInside=false는 "해당 없음"이 아니라 "확인 불가"를 의미합니다.
+    /// The source data was missing or unavailable, so the overlay could not be verified.
     /// </summary>
     DataUnavailable,
 }
 
-#endregion
-
-#region OverlayZoneResult 레코드
-
 /// <summary>
-/// 특정 공간 레이어(지구단위계획구역, 개발제한구역 등)에 입력 좌표가 포함되는지
-/// 판정한 결과를 나타냅니다.
+/// Result of checking whether a coordinate falls inside an overlay zone.
 /// </summary>
-/// <param name="IsInside">해당 구역 폴리곤 내부에 좌표가 포함되면 <c>true</c>.</param>
-/// <param name="Name">발견된 구역 명칭 (예: "개발제한구역"). 미포함 시 <c>null</c>.</param>
-/// <param name="Code">발견된 구역 코드 (예: "UDV100"). 미포함 시 <c>null</c>.</param>
-/// <param name="Source">
-/// 원천 데이터 식별자.
-/// 데이터 미보유 시 "데이터 미보유 (향후 연동 예정)" 등 안내 문자열.
-/// </param>
-/// <param name="Note">추가 안내 메시지 (null 허용).</param>
-/// <param name="Confidence">
-/// 판정 데이터 신뢰도.
-/// Normal = 정상, NearBoundary = 경계 근접, DataUnavailable = 데이터 없음.
-/// 기본값: Normal.
-/// </param>
+/// <param name="IsInside">True when the coordinate is inside the overlay zone.</param>
+/// <param name="Name">Overlay display name when available.</param>
+/// <param name="Code">Overlay code when available.</param>
+/// <param name="Source">Source identifier such as <c>shp</c>, <c>api</c>, or <c>none</c>.</param>
+/// <param name="Note">Optional diagnostic note for the overlay result.</param>
+/// <param name="Confidence">Reliability of the overlay result.</param>
+/// <param name="Outline">Optional WGS84 outline geometry for map rendering.</param>
 public record OverlayZoneResult(
-    bool    IsInside,
+    bool IsInside,
     string? Name,
     string? Code,
-    string  Source,
-    string? Note       = null,
-    OverlayConfidenceLevel Confidence = OverlayConfidenceLevel.Normal);
-
-#endregion
+    string Source,
+    string? Note = null,
+    OverlayConfidenceLevel Confidence = OverlayConfidenceLevel.Normal,
+    IReadOnlyList<ZoningGeometryPoint>? Outline = null);

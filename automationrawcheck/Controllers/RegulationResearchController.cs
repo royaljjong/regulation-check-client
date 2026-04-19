@@ -53,6 +53,17 @@ public sealed class RegulationResearchController : ControllerBase
         return Ok(_researchService.BuildSourceSyncPackage(request));
     }
 
+    [HttpPost("source-sync-run")]
+    [ProducesResponseType(typeof(RegulationSourceSyncRunResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> PostSourceSyncRun([FromBody] RegulationSourceSyncRequestDto request, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(request.Subject))
+            return BadRequest(new { error = "subject is required." });
+
+        return Ok(await _researchService.RunSourceSyncAsync(request, ct));
+    }
+
     [HttpPost("ai-assist-preview")]
     [ProducesResponseType(typeof(AiAssistResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
@@ -73,6 +84,17 @@ public sealed class RegulationResearchController : ControllerBase
             return BadRequest(new { error = "selectedUse is required." });
 
         return Ok(_aiAssistService.BuildRequestPackage(request));
+    }
+
+    [HttpPost("ai-assist/run")]
+    [ProducesResponseType(typeof(AiAssistRunResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> PostAiAssistRun([FromBody] AiAssistRequestDto request, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(request.SelectedUse))
+            return BadRequest(new { error = "selectedUse is required." });
+
+        return Ok(await _aiAssistService.RunAsync(request, ct));
     }
 
     [HttpGet("ai-assist/status")]

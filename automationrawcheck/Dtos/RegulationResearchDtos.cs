@@ -163,7 +163,53 @@ public sealed class AiAssistRequestPackageDto
     public string Model { get; init; } = "gemma4";
     public string ExecutionMode { get; init; } = "preview";
     public string OutputContract { get; init; } = "structured_json_only";
+    public string SystemInstruction { get; init; } = string.Empty;
     public Dictionary<string, object?> InputPayload { get; init; } = new(StringComparer.Ordinal);
+    public List<AiAssistTrainingExampleDto> TrainingExamples { get; init; } = new();
     public List<string> Guardrails { get; init; } = new();
     public List<string> SummaryLines { get; init; } = new();
+}
+
+public sealed class AiAssistTrainingExampleDto
+{
+    public string ExampleId { get; init; } = string.Empty;
+    public string Scenario { get; init; } = string.Empty;
+    public Dictionary<string, object?> InputExcerpt { get; init; } = new(StringComparer.Ordinal);
+    public Dictionary<string, object?> ExpectedOutput { get; init; } = new(StringComparer.Ordinal);
+}
+
+public sealed class AiAssistRunResponseDto
+{
+    public string SchemaVersion { get; init; } = "gemma4_run_response_v1";
+    public string Provider { get; init; } = "gemma4";
+    public string Model { get; init; } = "gemma4";
+    public string ExecutionMode { get; init; } = "preview";
+    public bool IsConfigured { get; init; }
+    public bool Success { get; init; }
+    public int? HttpStatusCode { get; init; }
+    public string? Error { get; init; }
+    public string? RawResponse { get; init; }
+    public string? StructuredOutputJson { get; init; }
+    public List<string> OutputKeys { get; init; } = new();
+    public AiAssistRequestPackageDto RequestPackage { get; init; } = new();
+    public List<string> SummaryLines { get; init; } = new();
+}
+
+public sealed class RegulationSourceSyncRunResponseDto
+{
+    public string SchemaVersion { get; init; } = "regulation_source_sync_run_v1";
+    public RegulationSourceSyncPackageDto Package { get; init; } = new();
+    public List<RegulationSourceSyncProbeTargetDto> Targets { get; init; } = new();
+    public List<string> SummaryLines { get; init; } = new();
+}
+
+public sealed class RegulationSourceSyncProbeTargetDto
+{
+    public string TargetId { get; init; } = string.Empty;
+    public string? Endpoint { get; init; }
+    public bool Configured { get; init; }
+    public int? HttpStatusCode { get; init; }
+    public string? ContentType { get; init; }
+    public string? ResponseSnippet { get; init; }
+    public string? Error { get; init; }
 }

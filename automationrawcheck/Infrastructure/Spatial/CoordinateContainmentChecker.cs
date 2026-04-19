@@ -84,6 +84,7 @@ public sealed class CoordinateContainmentChecker
 
     /// <summary>WGS84 → EPSG:5174 수학 변환기 (싱글턴으로 재사용)</summary>
     private static readonly IMathTransform Wgs84ToEpsg5174Transform = BuildTransform();
+    private static readonly IMathTransform Epsg5174ToWgs84Transform = BuildReverseTransform();
 
     private static IMathTransform BuildTransform()
     {
@@ -96,6 +97,19 @@ public sealed class CoordinateContainmentChecker
         // WGS84 (경도, 위도) → EPSG:5174 (Easting, Northing)
         return ctFactory
             .CreateFromCoordinateSystems(wgs84, epsg5174)
+            .MathTransform;
+    }
+
+    private static IMathTransform BuildReverseTransform()
+    {
+        var csFactory = new CoordinateSystemFactory();
+        var ctFactory = new CoordinateTransformationFactory();
+
+        var wgs84 = GeographicCoordinateSystem.WGS84;
+        var epsg5174 = csFactory.CreateFromWkt(Epsg5174Wkt);
+
+        return ctFactory
+            .CreateFromCoordinateSystems(epsg5174, wgs84)
             .MathTransform;
     }
 
@@ -187,7 +201,8 @@ public sealed class CoordinateContainmentChecker
                     name:        name,
                     code:        code,
                     sourceLayer: sourceLayerName,
-                    attributes:  feature.Attributes);
+                    attributes:  feature.Attributes,
+                    outline:     BuildOutline(feature.Geometry));
             }
             catch (Exception ex)
             {
@@ -240,7 +255,12 @@ public sealed class CoordinateContainmentChecker
                 {
                     var name = ZoneNameNormalizer.ResolveDisplayName(feature.Attributes);
                     var code = PickAttributeValue(feature.Attributes, CodeCandidates) ?? string.Empty;
-                    var zoning = new ZoningFeature(name, code, sourceLayerName, feature.Attributes);
+                    var zoning = new ZoningFeature(
+                        name,
+                        code,
+                        sourceLayerName,
+                        feature.Attributes,
+                        BuildOutline(feature.Geometry));
                     return (zoning, "Successful zoning hit.", 0, StringifyAttributes(feature.Attributes));
                 }
 
@@ -359,6 +379,58 @@ public sealed class CoordinateContainmentChecker
         {
             return string.Join(", ", attributes.Select(kv => $"{kv.Key}={kv.Value}"));
         }
+    }
+
+    private static IReadOnlyList<ZoningGeometryPoint> BuildOutline(Geometry geometry)
+    {
+        var polygon = GetRepresentativePolygon(geometry);
+        if (polygon is null)
+        {
+            return Array.Empty<ZoningGeometryPoint>();
+        }
+
+        var coordinates = polygon.ExteriorRing?.Coordinates;
+        if (coordinates is null || coordinates.Length < 4)
+        {
+            return Array.Empty<ZoningGeometryPoint>();
+        }
+
+        var outline = new List<ZoningGeometryPoint>(coordinates.Length);
+        foreach (var coordinate in coordinates)
+        {
+            var transformed = Epsg5174ToWgs84Transform.Transform(new[] { coordinate.X, coordinate.Y });
+            var longitude = transformed[0];
+            var latitude = transformed[1];
+
+            if (outline.Count > 0)
+            {
+                var previous = outline[^1];
+                if (Math.Abs(previous.Latitude - latitude) < 0.0000001 &&
+                    Math.Abs(previous.Longitude - longitude) < 0.0000001)
+                {
+                    continue;
+                }
+            }
+
+            outline.Add(new ZoningGeometryPoint(latitude, longitude));
+        }
+
+        return outline;
+    }
+
+    private static Polygon? GetRepresentativePolygon(Geometry geometry)
+    {
+        return geometry switch
+        {
+            Polygon polygon => polygon,
+            MultiPolygon multiPolygon when multiPolygon.NumGeometries > 0 =>
+                Enumerable.Range(0, multiPolygon.NumGeometries)
+                    .Select(index => multiPolygon.GetGeometryN(index))
+                    .OfType<Polygon>()
+                    .OrderByDescending(item => item.Area)
+                    .FirstOrDefault(),
+            _ => null
+        };
     }
 
     #endregion

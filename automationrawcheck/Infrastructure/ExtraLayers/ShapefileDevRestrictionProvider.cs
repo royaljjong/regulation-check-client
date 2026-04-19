@@ -158,7 +158,8 @@ public sealed class ShapefileDevRestrictionProvider : IDevelopmentRestrictionPro
             Name:     match.Name,
             Code:     match.Code,
             Source:   SourceDescription,
-            Note:     "개발제한구역 지정지역입니다. 건축 행위에 엄격한 제한이 적용됩니다.");
+            Note:     "개발제한구역 지정지역입니다. 건축 행위에 엄격한 제한이 적용됩니다.",
+            Outline:  match.Outline);
     }
 
     #endregion

@@ -149,7 +149,8 @@ public sealed class ShapefileDevActRestrictionProvider : IDevActRestrictionProvi
             Code:     match.Code,
             Source:   SourceDescription,
             Note:     "개발행위허가제한지역 내로 확인됩니다. " +
-                      "개발행위 및 인허가 제한 여부를 관련 법령(국토계획법 제63조) 기준으로 추가 검토하세요.");
+                      "개발행위 및 인허가 제한 여부를 관련 법령(국토계획법 제63조) 기준으로 추가 검토하세요.",
+            Outline:  match.Outline);
     }
 
     #endregion
