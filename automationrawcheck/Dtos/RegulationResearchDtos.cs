@@ -36,6 +36,11 @@ public sealed class RegulationResearchServiceStatusDto
 {
     public string SearchHubMode { get; init; } = "metadata_composition";
     public string LawChangeMode { get; init; } = "manual_compare";
+    public bool SupportsOfficialLawApi { get; init; }
+    public bool OfficialLawApiConfigured { get; init; }
+    public string? OfficialLawApiBaseUrl { get; init; }
+    public bool OfficialLawPublicDataConfigured { get; init; }
+    public string? OfficialLawPublicDataBaseUrl { get; init; }
     public bool SupportsLiveLawSource { get; init; }
     public bool SupportsMunicipalOrdinanceSync { get; init; }
     public bool SupportsPdfLinkHub { get; init; }
@@ -45,6 +50,55 @@ public sealed class RegulationResearchServiceStatusDto
     public string? LiveLawSourceEndpoint { get; init; }
     public string? MunicipalOrdinanceEndpoint { get; init; }
     public string? PdfHubEndpoint { get; init; }
+    public List<string> SummaryLines { get; init; } = new();
+}
+
+public sealed class OfficialLawSearchRequestDto
+{
+    public string Query { get; init; } = string.Empty;
+    public string Target { get; init; } = "law";
+    public int Display { get; init; } = 20;
+}
+
+public sealed class OfficialLawSearchItemDto
+{
+    public string Id { get; init; } = string.Empty;
+    public string? Mst { get; init; }
+    public string Title { get; init; } = string.Empty;
+    public string? Summary { get; init; }
+    public string Target { get; init; } = string.Empty;
+    public string? Link { get; init; }
+    public string? Department { get; init; }
+    public string? PromulgationDate { get; init; }
+}
+
+public sealed class OfficialLawSearchResponseDto
+{
+    public string SchemaVersion { get; init; } = "official_law_search_v1";
+    public string Target { get; init; } = string.Empty;
+    public string Query { get; init; } = string.Empty;
+    public bool IsConfigured { get; init; }
+    public List<OfficialLawSearchItemDto> Items { get; init; } = new();
+    public List<string> SummaryLines { get; init; } = new();
+}
+
+public sealed class OfficialLawBodyRequestDto
+{
+    public string Target { get; init; } = "law";
+    public string? Id { get; init; }
+    public string? Mst { get; init; }
+}
+
+public sealed class OfficialLawBodyResponseDto
+{
+    public string SchemaVersion { get; init; } = "official_law_body_v1";
+    public string Target { get; init; } = string.Empty;
+    public string? Id { get; init; }
+    public string? Mst { get; init; }
+    public bool IsConfigured { get; init; }
+    public string? Title { get; init; }
+    public string? Link { get; init; }
+    public string? RawBody { get; init; }
     public List<string> SummaryLines { get; init; } = new();
 }
 
@@ -110,6 +164,7 @@ public sealed class AiAssistRequestDto
 {
     [SwaggerSchema(Description = "Selected use from the review flow.")]
     public string SelectedUse { get; init; } = string.Empty;
+    public string? UserPrompt { get; init; }
     public UseProfileSummaryDto? UseProfile { get; init; }
     public Dictionary<string, object?> PlanningContext { get; init; } = new(StringComparer.Ordinal);
     public List<ReviewItemDto> ReviewItems { get; init; } = new();

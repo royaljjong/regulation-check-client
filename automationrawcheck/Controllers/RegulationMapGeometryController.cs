@@ -11,13 +11,16 @@ public sealed class RegulationMapGeometryController : ControllerBase
 {
     private readonly IRegulationCheckService _regulationCheckService;
     private readonly ICityPlanFacilityGeometryService _cityPlanFacilityGeometryService;
+    private readonly IParcelBoundaryGeometryService _parcelBoundaryGeometryService;
 
     public RegulationMapGeometryController(
         IRegulationCheckService regulationCheckService,
-        ICityPlanFacilityGeometryService cityPlanFacilityGeometryService)
+        ICityPlanFacilityGeometryService cityPlanFacilityGeometryService,
+        IParcelBoundaryGeometryService parcelBoundaryGeometryService)
     {
         _regulationCheckService = regulationCheckService;
         _cityPlanFacilityGeometryService = cityPlanFacilityGeometryService;
+        _parcelBoundaryGeometryService = parcelBoundaryGeometryService;
     }
 
     [HttpPost("map-geometries")]
@@ -29,6 +32,22 @@ public sealed class RegulationMapGeometryController : ControllerBase
         var result = await _regulationCheckService.CheckAsync(query, ct);
 
         var geometries = new List<RegulationMapPolygonDto>();
+        var parcelBoundary = await _parcelBoundaryGeometryService.FindContainingAsync(query, ct);
+
+        AddGeometry(
+            geometries,
+            "parcel_boundary",
+            parcelBoundary is { Jibun: { Length: > 0 } }
+                ? $"필지 경계 ({parcelBoundary.Jibun})"
+                : "필지 경계",
+            "polygon",
+            "parcel_boundary",
+            "대지 경계",
+            5,
+            "#111827",
+            "#ffffff",
+            0.03,
+            parcelBoundary?.Outline);
 
         AddGeometry(
             geometries,

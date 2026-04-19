@@ -48,6 +48,7 @@ public sealed class Gemma4AiAssistService : IAiAssistService
             SystemInstruction = _options.SystemInstruction,
             InputPayload = new Dictionary<string, object?>(StringComparer.Ordinal)
             {
+                ["userPrompt"] = request.UserPrompt,
                 ["selectedUse"] = request.SelectedUse,
                 ["useProfile"] = request.UseProfile,
                 ["planningContext"] = request.PlanningContext,
@@ -92,6 +93,9 @@ public sealed class Gemma4AiAssistService : IAiAssistService
 
         try
         {
+            if (IsOllamaEndpoint())
+                return await RunOllamaAsync(package, ct).ConfigureAwait(false);
+
             var client = _httpClientFactory.CreateClient(HttpClientName);
             using var message = new HttpRequestMessage(HttpMethod.Post, string.Empty)
             {
@@ -188,7 +192,103 @@ public sealed class Gemma4AiAssistService : IAiAssistService
     private bool IsConfigured()
         => _options.Enabled &&
            !string.IsNullOrWhiteSpace(_options.Endpoint) &&
-           !string.IsNullOrWhiteSpace(_options.ApiKey);
+           (IsOllamaEndpoint() || !string.IsNullOrWhiteSpace(_options.ApiKey));
+
+    private bool IsOllamaEndpoint()
+    {
+        if (string.IsNullOrWhiteSpace(_options.Endpoint) || !Uri.TryCreate(_options.Endpoint, UriKind.Absolute, out var uri))
+            return false;
+
+        return uri.IsLoopback && uri.Port == 11434;
+    }
+
+    private async Task<AiAssistRunResponseDto> RunOllamaAsync(AiAssistRequestPackageDto package, CancellationToken ct)
+    {
+        var client = _httpClientFactory.CreateClient(HttpClientName);
+        var prompt = BuildOllamaPrompt(package);
+        var payload = new
+        {
+            model = _options.Model,
+            stream = false,
+            messages = new object[]
+            {
+                new { role = "system", content = package.SystemInstruction },
+                new { role = "user", content = prompt }
+            }
+        };
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, string.Empty)
+        {
+            Content = new StringContent(JsonSerializer.Serialize(payload, JsonOptions), Encoding.UTF8, "application/json")
+        };
+
+        using var response = await client.SendAsync(message, ct).ConfigureAwait(false);
+        var raw = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        var content = TryExtractOllamaContent(raw);
+        var (structuredJson, outputKeys) = TryExtractStructuredJson(content ?? raw);
+
+        return new AiAssistRunResponseDto
+        {
+            Provider = _options.Provider,
+            Model = _options.Model,
+            ExecutionMode = _options.ExecutionMode,
+            IsConfigured = true,
+            Success = response.IsSuccessStatusCode && structuredJson is not null,
+            HttpStatusCode = (int)response.StatusCode,
+            Error = response.IsSuccessStatusCode
+                ? structuredJson is null ? "structured_json_not_found" : null
+                : $"http_{(int)response.StatusCode}",
+            RawResponse = Clip(content ?? raw),
+            StructuredOutputJson = structuredJson,
+            OutputKeys = outputKeys,
+            RequestPackage = package,
+            SummaryLines =
+            [
+                "Local Ollama endpoint used.",
+                $"model={_options.Model}",
+                $"httpStatus={(int)response.StatusCode}",
+                structuredJson is null
+                    ? "Ollama responded but structured JSON could not be extracted."
+                    : "Structured JSON payload extracted successfully."
+            ]
+        };
+    }
+
+    private static string BuildOllamaPrompt(AiAssistRequestPackageDto package)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("Return structured JSON only.");
+        builder.AppendLine("Use this request package:");
+        builder.AppendLine(JsonSerializer.Serialize(package, JsonOptions));
+        return builder.ToString();
+    }
+
+    private static string? TryExtractOllamaContent(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return null;
+
+        try
+        {
+            using var document = JsonDocument.Parse(raw);
+            var root = document.RootElement;
+            if (root.TryGetProperty("message", out var message) &&
+                message.ValueKind == JsonValueKind.Object &&
+                message.TryGetProperty("content", out var content) &&
+                content.ValueKind == JsonValueKind.String)
+            {
+                return content.GetString();
+            }
+
+            if (root.TryGetProperty("response", out var response) && response.ValueKind == JsonValueKind.String)
+                return response.GetString();
+        }
+        catch (JsonException)
+        {
+        }
+
+        return null;
+    }
 
     private void ApplyApiKey(HttpRequestMessage message)
     {

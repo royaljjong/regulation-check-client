@@ -256,6 +256,7 @@ try
     // ── 지번/주소 → 좌표 변환 고수준 프로바이더 (Transient) ──────────────────
     // TODO: 외부 주소 API 연동 시 교체
     builder.Services.AddTransient<IParcelSearchProvider, VWorldParcelSearchProvider>();
+    builder.Services.AddTransient<IParcelBoundaryGeometryService, VWorldParcelBoundaryGeometryService>();
 
     // ── 주소 해석기 — IAddressResolver (Transient) ───────────────────────────
     // VWorldAddressResolver: V-World 주소 좌표 검색 API 실구현체

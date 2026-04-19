@@ -20,7 +20,7 @@ public sealed class AiAssistOptionsValidator : IValidateOptions<AiAssistOptions>
         if (string.IsNullOrWhiteSpace(options.Endpoint))
             failures.Add("AiAssist:Endpoint is required when Enabled=true.");
 
-        if (string.IsNullOrWhiteSpace(options.ApiKey))
+        if (!IsAnonymousLocalEndpoint(options.Endpoint) && string.IsNullOrWhiteSpace(options.ApiKey))
             failures.Add("AiAssist:ApiKey is required when Enabled=true.");
 
         if (string.IsNullOrWhiteSpace(options.ApiKeyHeaderName))
@@ -29,5 +29,13 @@ public sealed class AiAssistOptionsValidator : IValidateOptions<AiAssistOptions>
         return failures.Count == 0
             ? ValidateOptionsResult.Success
             : ValidateOptionsResult.Fail(failures);
+    }
+
+    private static bool IsAnonymousLocalEndpoint(string? endpoint)
+    {
+        if (string.IsNullOrWhiteSpace(endpoint) || !Uri.TryCreate(endpoint, UriKind.Absolute, out var uri))
+            return false;
+
+        return uri.IsLoopback && uri.Port == 11434;
     }
 }

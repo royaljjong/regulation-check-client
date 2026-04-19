@@ -388,6 +388,46 @@ public sealed class ProjectChecklistDto
     public int ManualReview { get; init; }
 }
 
+public sealed class ApplicableLawCatalogDto
+{
+    public string SchemaVersion { get; init; } = "applicable_laws_v1";
+    public List<ApplicableLawSectionDto> Sections { get; init; } = new();
+    public List<string> SummaryLines { get; init; } = new();
+}
+
+public sealed class ApplicableLawSectionDto
+{
+    public string SectionId { get; init; } = string.Empty;
+    public string Title { get; init; } = string.Empty;
+    public List<ApplicableLawItemDto> Items { get; init; } = new();
+}
+
+public sealed class ApplicableLawItemDto
+{
+    public string ItemId { get; init; } = string.Empty;
+    public string SourceType { get; init; } = string.Empty;
+    public string Category { get; init; } = string.Empty;
+    public string Title { get; init; } = string.Empty;
+    public string Summary { get; init; } = string.Empty;
+    public string Status { get; init; } = string.Empty;
+    public string? LawName { get; init; }
+    public string? ArticleRef { get; init; }
+    public string? Link { get; init; }
+    public List<string> RelatedLaws { get; init; } = new();
+    public List<string> RelatedRuleIds { get; init; } = new();
+    public List<string> RequiredInputs { get; init; } = new();
+}
+
+public sealed class ReviewTriggerDto
+{
+    public string TriggerId { get; init; } = string.Empty;
+    public string Category { get; init; } = string.Empty;
+    public string Title { get; init; } = string.Empty;
+    public string Status { get; init; } = string.Empty;
+    public string Basis { get; init; } = string.Empty;
+    public List<string> RequiredInputs { get; init; } = new();
+}
+
 /// <summary>수동 검토 레이어 카드 DTO</summary>
 public sealed class ManualReviewCardDto
 {
@@ -552,6 +592,10 @@ public sealed class BuildingReviewResponseDto
     /// </summary>
     [SwaggerSchema(Description = "검토 항목 목록. judgeStatus로 판정 수준 구분.")]
     public List<ReviewItemDto> ReviewItems { get; init; } = new();
+
+    public ApplicableLawCatalogDto ApplicableLaws { get; init; } = new();
+
+    public List<ReviewTriggerDto> ReviewTriggers { get; init; } = new();
 
     /// <summary>ReviewItems를 사용자 작업 단위로 집계한 Task 레이어</summary>
     public List<ReviewTaskDto> Tasks { get; init; } = new();

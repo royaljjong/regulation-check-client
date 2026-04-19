@@ -26,6 +26,41 @@ public static class ReviewResponseComposer
         InputSummaryDto inputSummary,
         long elapsedMs)
     {
+        return Compose(
+            request,
+            reviewLevel,
+            zoneName,
+            zoneCode,
+            districtUnitPlan,
+            developmentRestriction,
+            developmentActionRestriction,
+            location,
+            zoning,
+            overlays,
+            reviewItems,
+            allRules,
+            Array.Empty<LawReference>(),
+            inputSummary,
+            elapsedMs);
+    }
+
+    public static BuildingReviewResponseDto Compose(
+        BuildingReviewRequestDto request,
+        ReviewLevel reviewLevel,
+        string? zoneName,
+        string? zoneCode,
+        bool? districtUnitPlan,
+        bool? developmentRestriction,
+        bool? developmentActionRestriction,
+        LocationSummaryDto location,
+        ZoningSummaryDto? zoning,
+        OverlaySummaryDto overlays,
+        IReadOnlyList<ReviewItemDto> reviewItems,
+        IReadOnlyList<ReviewItemRuleRecord> allRules,
+        IReadOnlyList<LawReference> zoningLawReferences,
+        InputSummaryDto inputSummary,
+        long elapsedMs)
+    {
         var frame = ReviewEngineFrameFactory.Create(
             request,
             zoneName,
@@ -71,6 +106,18 @@ public static class ReviewResponseComposer
             urbanPlanningFacility: frame.PlanningContext.IsInUrbanPlanningFacility,
             developmentActionDetail: overlays.DevelopmentActionRestrictionDetail);
 
+        var (applicableLaws, reviewTriggers) = ApplicableLawCatalogBuilder.Build(
+            request.SelectedUse,
+            useProfile,
+            zoning,
+            overlays,
+            reviewItemList,
+            tasks.Select(MapTaskDto).ToList(),
+            manualReviews,
+            ordinanceReviews.ToList(),
+            zoningLawReferences,
+            request.BuildingInputs);
+
         var reportPreview = ReportPreviewBuilder.Build(
             request,
             useProfile,
@@ -91,6 +138,8 @@ public static class ReviewResponseComposer
             Zoning = zoning,
             Overlays = overlays,
             ReviewItems = reviewItemList,
+            ApplicableLaws = applicableLaws,
+            ReviewTriggers = reviewTriggers.ToList(),
             Tasks = tasks.Select(MapTaskDto).ToList(),
             ActiveRuleBundles = activeRuleBundles.ToList(),
             Checklist = MapChecklistDto(checklist),

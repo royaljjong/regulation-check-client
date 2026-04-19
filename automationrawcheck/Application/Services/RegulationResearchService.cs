@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Xml.Linq;
 using AutomationRawCheck.Api.Dtos;
 using AutomationRawCheck.Application.Interfaces;
 using AutomationRawCheck.Infrastructure.Configuration;
@@ -9,6 +10,7 @@ namespace AutomationRawCheck.Application.Services;
 public sealed class RegulationResearchService : IRegulationResearchService
 {
     private const string HttpClientName = "regulation-research-live";
+    private const string LawHttpClientName = "LawApi";
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly RegulationResearchOptions _options;
 
@@ -28,6 +30,184 @@ public sealed class RegulationResearchService : IRegulationResearchService
     public LawChangeCompareResponseDto CompareLawChanges(LawChangeCompareRequestDto request)
     {
         return LawChangeComparisonBuilder.Build(request);
+    }
+
+    public async Task<OfficialLawSearchResponseDto> SearchOfficialLawAsync(OfficialLawSearchRequestDto request, CancellationToken ct = default)
+    {
+        var target = NormalizeOfficialLawTarget(request.Target);
+        var query = request.Query?.Trim() ?? string.Empty;
+        var display = Math.Clamp(request.Display <= 0 ? 20 : request.Display, 1, 100);
+
+        if (!IsAnyOfficialLawSearchConfigured())
+        {
+            return new OfficialLawSearchResponseDto
+            {
+                Target = target,
+                Query = query,
+                IsConfigured = false,
+                SummaryLines =
+                [
+                    "Official law API is not configured.",
+                    "Set RegulationResearch:OfficialLawApiOc or OfficialLawPublicDataServiceKey."
+                ]
+            };
+        }
+
+        try
+        {
+            if (IsOfficialLawApiConfigured())
+            {
+                var client = _httpClientFactory.CreateClient(LawHttpClientName);
+                var url = $"{_options.OfficialLawApiBaseUrl.TrimEnd('/')}/lawSearch.do?OC={Uri.EscapeDataString(_options.OfficialLawApiOc)}&target={Uri.EscapeDataString(target)}&type=JSON&query={Uri.EscapeDataString(query)}&display={display}";
+                using var response = await client.GetAsync(url, ct).ConfigureAwait(false);
+                var body = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new OfficialLawSearchResponseDto
+                    {
+                        Target = target,
+                        Query = query,
+                        IsConfigured = true,
+                        SummaryLines =
+                        [
+                            $"official_law_api_http={(int)response.StatusCode}",
+                            Clip(body) ?? "empty_response"
+                        ]
+                    };
+                }
+
+                var items = ParseOfficialLawSearch(body, target);
+                return new OfficialLawSearchResponseDto
+                {
+                    Target = target,
+                    Query = query,
+                    IsConfigured = true,
+                    Items = items,
+                    SummaryLines =
+                    [
+                        "searchSource=law.go.kr_drf",
+                        $"target={target}",
+                        $"query={query}",
+                        $"items={items.Count}"
+                    ]
+                };
+            }
+
+            var publicItems = await SearchOfficialLawViaPublicDataAsync(query, target, display, ct).ConfigureAwait(false);
+            return new OfficialLawSearchResponseDto
+            {
+                Target = target,
+                Query = query,
+                IsConfigured = true,
+                Items = publicItems,
+                SummaryLines =
+                [
+                    "searchSource=data.go.kr_serviceKey",
+                    $"target={target}",
+                    $"query={query}",
+                    $"items={publicItems.Count}"
+                ]
+            };
+        }
+        catch (Exception ex)
+        {
+            return new OfficialLawSearchResponseDto
+            {
+                Target = target,
+                Query = query,
+                IsConfigured = true,
+                SummaryLines =
+                [
+                    $"official_law_api_error={ex.GetType().Name}"
+                ]
+            };
+        }
+    }
+
+    public async Task<OfficialLawBodyResponseDto> GetOfficialLawBodyAsync(OfficialLawBodyRequestDto request, CancellationToken ct = default)
+    {
+        var target = NormalizeOfficialLawTarget(request.Target);
+
+        if (!IsOfficialLawApiConfigured())
+        {
+            return new OfficialLawBodyResponseDto
+            {
+                Target = target,
+                Id = request.Id,
+                Mst = request.Mst,
+                IsConfigured = false,
+                SummaryLines =
+                [
+                    "Official law body lookup requires law.go.kr DRF OC.",
+                    "Search can still work with OfficialLawPublicDataServiceKey, but body lookup needs OfficialLawApiOc."
+                ]
+            };
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Id) && string.IsNullOrWhiteSpace(request.Mst))
+        {
+            return new OfficialLawBodyResponseDto
+            {
+                Target = target,
+                Id = request.Id,
+                Mst = request.Mst,
+                IsConfigured = true,
+                SummaryLines = ["Either id or mst is required."]
+            };
+        }
+
+        try
+        {
+            var client = _httpClientFactory.CreateClient(LawHttpClientName);
+            var queryParts = new List<string>
+            {
+                $"OC={Uri.EscapeDataString(_options.OfficialLawApiOc)}",
+                $"target={Uri.EscapeDataString(target)}",
+                "type=JSON"
+            };
+
+            if (!string.IsNullOrWhiteSpace(request.Id))
+                queryParts.Add($"ID={Uri.EscapeDataString(request.Id)}");
+
+            if (!string.IsNullOrWhiteSpace(request.Mst))
+                queryParts.Add($"MST={Uri.EscapeDataString(request.Mst)}");
+
+            var url = $"{_options.OfficialLawApiBaseUrl.TrimEnd('/')}/lawService.do?{string.Join("&", queryParts)}";
+            using var response = await client.GetAsync(url, ct).ConfigureAwait(false);
+            var body = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+
+            return new OfficialLawBodyResponseDto
+            {
+                Target = target,
+                Id = request.Id,
+                Mst = request.Mst,
+                IsConfigured = true,
+                Title = TryExtractOfficialLawBodyTitle(body, target),
+                Link = BuildOfficialLawLink(target, request.Id, request.Mst),
+                RawBody = Clip(body),
+                SummaryLines =
+                [
+                    $"target={target}",
+                    $"http={(int)response.StatusCode}",
+                    response.IsSuccessStatusCode ? "body_loaded" : "body_load_failed"
+                ]
+            };
+        }
+        catch (Exception ex)
+        {
+            return new OfficialLawBodyResponseDto
+            {
+                Target = target,
+                Id = request.Id,
+                Mst = request.Mst,
+                IsConfigured = true,
+                SummaryLines =
+                [
+                    $"official_law_body_error={ex.GetType().Name}"
+                ]
+            };
+        }
     }
 
     public RegulationSourceSyncPackageDto BuildSourceSyncPackage(RegulationSourceSyncRequestDto request)
@@ -85,6 +265,11 @@ public sealed class RegulationResearchService : IRegulationResearchService
         {
             SearchHubMode = _options.SearchHubMode,
             LawChangeMode = _options.ChangeTrackingMode,
+            SupportsOfficialLawApi = true,
+            OfficialLawApiConfigured = IsOfficialLawApiConfigured() || IsOfficialLawPublicDataConfigured(),
+            OfficialLawApiBaseUrl = string.IsNullOrWhiteSpace(_options.OfficialLawApiBaseUrl) ? null : _options.OfficialLawApiBaseUrl,
+            OfficialLawPublicDataConfigured = IsOfficialLawPublicDataConfigured(),
+            OfficialLawPublicDataBaseUrl = string.IsNullOrWhiteSpace(_options.OfficialLawPublicDataBaseUrl) ? null : _options.OfficialLawPublicDataBaseUrl,
             SupportsLiveLawSource = !string.IsNullOrWhiteSpace(_options.LiveLawSourceEndpoint),
             SupportsMunicipalOrdinanceSync = !string.IsNullOrWhiteSpace(_options.MunicipalOrdinanceEndpoint),
             SupportsPdfLinkHub = !string.IsNullOrWhiteSpace(_options.PdfHubEndpoint),
@@ -96,11 +281,200 @@ public sealed class RegulationResearchService : IRegulationResearchService
             PdfHubEndpoint = string.IsNullOrWhiteSpace(_options.PdfHubEndpoint) ? null : _options.PdfHubEndpoint,
             SummaryLines =
             [
+                IsOfficialLawApiConfigured()
+                    ? "Official law API is configured for law.go.kr DRF search/body lookup."
+                    : IsOfficialLawPublicDataConfigured()
+                        ? "Official law search is configured through data.go.kr serviceKey. Body lookup still needs DRF OC."
+                        : "Official law API is available but OC/serviceKey is not configured yet.",
                 "Search hub is built from use profile hints, task hints, manual review cards, and ordinance cards.",
                 "Law change compare can diff supplied current/amended clauses and can now probe configured live source endpoints.",
                 "Live source execution still depends on valid external endpoints and credentials."
             ]
         };
+    }
+
+    private bool IsOfficialLawApiConfigured()
+        => _options.OfficialLawApiEnabled
+           && !string.IsNullOrWhiteSpace(_options.OfficialLawApiOc)
+           && !string.IsNullOrWhiteSpace(_options.OfficialLawApiBaseUrl);
+
+    private bool IsOfficialLawPublicDataConfigured()
+        => _options.OfficialLawApiEnabled
+           && !string.IsNullOrWhiteSpace(_options.OfficialLawPublicDataServiceKey)
+           && !string.IsNullOrWhiteSpace(_options.OfficialLawPublicDataBaseUrl);
+
+    private bool IsAnyOfficialLawSearchConfigured()
+        => IsOfficialLawApiConfigured() || IsOfficialLawPublicDataConfigured();
+
+    private static string NormalizeOfficialLawTarget(string? target)
+        => (target ?? "law").Trim().ToLowerInvariant() switch
+        {
+            "ordin" => "ordin",
+            "expc" => "expc",
+            _ => "law",
+        };
+
+    private static List<OfficialLawSearchItemDto> ParseOfficialLawSearch(string body, string target)
+    {
+        var items = new List<OfficialLawSearchItemDto>();
+
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            var root = doc.RootElement;
+            if (!root.TryGetProperty("LawSearch", out var lawSearch))
+                return items;
+
+            if (!lawSearch.TryGetProperty(target, out var targetElement))
+                return items;
+
+            if (targetElement.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var item in targetElement.EnumerateArray())
+                    TryAddOfficialLawSearchItem(item, target, items);
+            }
+            else if (targetElement.ValueKind == JsonValueKind.Object)
+            {
+                TryAddOfficialLawSearchItem(targetElement, target, items);
+            }
+        }
+        catch (JsonException)
+        {
+        }
+
+        return items;
+    }
+
+    private static void TryAddOfficialLawSearchItem(JsonElement element, string target, List<OfficialLawSearchItemDto> items)
+    {
+        string? id = ReadJsonString(element, "법령ID", "자치법규ID", "해석례일련번호", "ID");
+        string? mst = ReadJsonString(element, "법령일련번호", "자치법규일련번호", "MST");
+        string? title = ReadJsonString(element, "법령명한글", "자치법규명", "법령해석례명", "법령명");
+        string? summary = ReadJsonString(element, "제개정구분명", "공포일자", "질의요지", "소관부처명");
+        string? department = ReadJsonString(element, "소관부처명", "자치단체명", "회신기관명");
+        string? promulgationDate = ReadJsonString(element, "공포일자", "시행일자", "해석일자");
+
+        if (string.IsNullOrWhiteSpace(title))
+            return;
+
+        items.Add(new OfficialLawSearchItemDto
+        {
+            Id = id ?? mst ?? title,
+            Mst = mst,
+            Title = title,
+            Summary = summary,
+            Target = target,
+            Department = department,
+            PromulgationDate = promulgationDate,
+            Link = BuildOfficialLawLink(target, id, mst)
+        });
+    }
+
+    private static string? TryExtractOfficialLawBodyTitle(string body, string target)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            var root = doc.RootElement;
+            return target switch
+            {
+                "ordin" => ReadNestedJsonString(root, new[] { "자치법규", "기본정보", "자치법규명" }),
+                "expc" => ReadNestedJsonString(root, new[] { "법령해석례", "기본정보", "법령해석례명" }),
+                _ => ReadNestedJsonString(root, new[] { "법령", "기본정보", "법령명_한글" }) ??
+                     ReadNestedJsonString(root, new[] { "법령", "기본정보", "법령명한글" })
+            };
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private async Task<List<OfficialLawSearchItemDto>> SearchOfficialLawViaPublicDataAsync(string query, string target, int display, CancellationToken ct)
+    {
+        var client = _httpClientFactory.CreateClient(HttpClientName);
+        var url =
+            $"{_options.OfficialLawPublicDataBaseUrl.TrimEnd('/')}/lawSearchList.do" +
+            $"?serviceKey={Uri.EscapeDataString(_options.OfficialLawPublicDataServiceKey)}" +
+            $"&target={Uri.EscapeDataString(target)}" +
+            $"&query={Uri.EscapeDataString(query)}" +
+            $"&numOfRows={display}&pageNo=1";
+
+        using var response = await client.GetAsync(url, ct).ConfigureAwait(false);
+        var body = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        if (!response.IsSuccessStatusCode)
+            return [];
+
+        return ParseOfficialLawSearchXml(body, target);
+    }
+
+    private static List<OfficialLawSearchItemDto> ParseOfficialLawSearchXml(string xml, string target)
+    {
+        var items = new List<OfficialLawSearchItemDto>();
+
+        try
+        {
+            var document = XDocument.Parse(xml);
+            foreach (var lawElement in document.Descendants("law"))
+            {
+                var id = lawElement.Element("법령ID")?.Value?.Trim();
+                var mst = lawElement.Element("법령일련번호")?.Value?.Trim();
+                var title = lawElement.Element("법령명한글")?.Value?.Trim();
+                if (string.IsNullOrWhiteSpace(title))
+                    continue;
+
+                items.Add(new OfficialLawSearchItemDto
+                {
+                    Id = string.IsNullOrWhiteSpace(id) ? (mst ?? title) : id,
+                    Mst = mst,
+                    Title = title,
+                    Summary = lawElement.Element("제개정구분명")?.Value?.Trim(),
+                    Target = target,
+                    Department = lawElement.Element("소관부처명")?.Value?.Trim(),
+                    PromulgationDate = lawElement.Element("공포일자")?.Value?.Trim(),
+                    Link = BuildOfficialLawLink(target, id, mst)
+                });
+            }
+        }
+        catch
+        {
+        }
+
+        return items;
+    }
+
+    private static string? ReadJsonString(JsonElement element, params string[] names)
+    {
+        foreach (var name in names)
+        {
+            if (element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String)
+                return value.GetString();
+        }
+
+        return null;
+    }
+
+    private static string? ReadNestedJsonString(JsonElement element, IReadOnlyList<string> path)
+    {
+        var current = element;
+        foreach (var segment in path)
+        {
+            if (!current.TryGetProperty(segment, out current))
+                return null;
+        }
+
+        return current.ValueKind == JsonValueKind.String ? current.GetString() : null;
+    }
+
+    private static string? BuildOfficialLawLink(string target, string? id, string? mst)
+    {
+        if (!string.IsNullOrWhiteSpace(id))
+            return $"https://www.law.go.kr/DRF/lawService.do?target={target}&ID={Uri.EscapeDataString(id)}";
+
+        if (!string.IsNullOrWhiteSpace(mst))
+            return $"https://www.law.go.kr/DRF/lawService.do?target={target}&MST={Uri.EscapeDataString(mst)}";
+
+        return null;
     }
 
     private async Task<RegulationSourceSyncProbeTargetDto> ProbeAsync(

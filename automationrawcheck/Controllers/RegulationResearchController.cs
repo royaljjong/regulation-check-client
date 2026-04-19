@@ -42,6 +42,28 @@ public sealed class RegulationResearchController : ControllerBase
         return Ok(_researchService.CompareLawChanges(request));
     }
 
+    [HttpPost("official-law/search")]
+    [ProducesResponseType(typeof(OfficialLawSearchResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> PostOfficialLawSearch([FromBody] OfficialLawSearchRequestDto request, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(request.Query))
+            return BadRequest(new { error = "query is required." });
+
+        return Ok(await _researchService.SearchOfficialLawAsync(request, ct));
+    }
+
+    [HttpPost("official-law/body")]
+    [ProducesResponseType(typeof(OfficialLawBodyResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> PostOfficialLawBody([FromBody] OfficialLawBodyRequestDto request, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(request.Id) && string.IsNullOrWhiteSpace(request.Mst))
+            return BadRequest(new { error = "id or mst is required." });
+
+        return Ok(await _researchService.GetOfficialLawBodyAsync(request, ct));
+    }
+
     [HttpPost("source-sync-package")]
     [ProducesResponseType(typeof(RegulationSourceSyncPackageDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]

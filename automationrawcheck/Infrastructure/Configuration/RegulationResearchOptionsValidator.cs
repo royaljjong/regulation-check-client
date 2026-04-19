@@ -8,6 +8,21 @@ public sealed class RegulationResearchOptionsValidator : IValidateOptions<Regula
     {
         var failures = new List<string>();
 
+        if (!string.IsNullOrWhiteSpace(options.OfficialLawApiBaseUrl) &&
+            !Uri.TryCreate(options.OfficialLawApiBaseUrl, UriKind.Absolute, out _))
+            failures.Add("RegulationResearch:OfficialLawApiBaseUrl must be an absolute URI.");
+
+        if (!string.IsNullOrWhiteSpace(options.OfficialLawPublicDataBaseUrl) &&
+            !Uri.TryCreate(options.OfficialLawPublicDataBaseUrl, UriKind.Absolute, out _))
+            failures.Add("RegulationResearch:OfficialLawPublicDataBaseUrl must be an absolute URI.");
+
+        if (options.OfficialLawApiEnabled &&
+            string.IsNullOrWhiteSpace(options.OfficialLawApiOc) &&
+            string.IsNullOrWhiteSpace(options.OfficialLawPublicDataServiceKey))
+        {
+            failures.Add("RegulationResearch:OfficialLawApiOc or OfficialLawPublicDataServiceKey is required when OfficialLawApiEnabled=true.");
+        }
+
         if (!string.IsNullOrWhiteSpace(options.LiveLawSourceEndpoint) &&
             !Uri.TryCreate(options.LiveLawSourceEndpoint, UriKind.Absolute, out _))
             failures.Add("RegulationResearch:LiveLawSourceEndpoint must be an absolute URI.");
