@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -64,7 +65,7 @@ public sealed class Gemma4AiAssistService : IAiAssistService
                 $"provider={_options.Provider}",
                 $"model={_options.Model}",
                 $"executionMode={_options.ExecutionMode}",
-                "Payload is ready for a Gemma4 runner and expects structured JSON only."
+                "AI 보조 실행기용 요청 패키지가 준비되었습니다."
             ]
         };
     }
@@ -85,8 +86,8 @@ public sealed class Gemma4AiAssistService : IAiAssistService
                 RequestPackage = package,
                 SummaryLines =
                 [
-                    "Gemma4 runner endpoint or API key is not configured.",
-                    "Set AiAssist:Enabled, Endpoint, ApiKey, and ApiKeyHeaderName to enable live execution."
+                    "AI 보조 실행기가 아직 연결되지 않았습니다.",
+                    "Endpoint와 필요한 인증값을 설정하면 실응답 모드로 전환됩니다."
                 ]
             };
         }
@@ -129,8 +130,8 @@ public sealed class Gemma4AiAssistService : IAiAssistService
                     $"model={_options.Model}",
                     $"httpStatus={(int)response.StatusCode}",
                     structuredJson is null
-                        ? "Runner responded but no structured JSON payload could be extracted."
-                        : "Structured JSON payload extracted successfully."
+                        ? "응답은 받았지만 구조화된 JSON을 추출하지 못했습니다."
+                        : "구조화된 응답을 정상 추출했습니다."
                 ]
             };
         }
@@ -145,7 +146,7 @@ public sealed class Gemma4AiAssistService : IAiAssistService
                 Success = false,
                 Error = "timeout",
                 RequestPackage = package,
-                SummaryLines = ["Gemma4 runner timed out before returning a structured response."]
+                SummaryLines = ["AI 보조 응답 생성 시간이 초과되었습니다."]
             };
         }
         catch (Exception ex)
@@ -159,7 +160,7 @@ public sealed class Gemma4AiAssistService : IAiAssistService
                 Success = false,
                 Error = ex.GetType().Name,
                 RequestPackage = package,
-                SummaryLines = [$"Gemma4 runner call failed: {ex.Message}"]
+                SummaryLines = [$"AI 보조 실행 중 오류가 발생했습니다: {ex.Message}"]
             };
         }
     }
@@ -183,8 +184,8 @@ public sealed class Gemma4AiAssistService : IAiAssistService
                 $"model={_options.Model}",
                 $"executionMode={_options.ExecutionMode}",
                 IsConfigured()
-                    ? "AI Assist service is ready for live Gemma4 execution."
-                    : "AI Assist service is still in preview-only mode until endpoint and API key are configured."
+                    ? "AI 보조 기능이 실응답 모드로 준비되었습니다."
+                    : "AI 보조 기능은 아직 미리보기/준비 모드입니다."
             ]
         };
     }
@@ -210,6 +211,7 @@ public sealed class Gemma4AiAssistService : IAiAssistService
         {
             model = _options.Model,
             stream = false,
+            format = "json",
             options = new
             {
                 temperature = 0.2,
@@ -235,7 +237,7 @@ public sealed class Gemma4AiAssistService : IAiAssistService
         if (structuredJson is null && !string.IsNullOrWhiteSpace(rawContent))
         {
             structuredJson = BuildFallbackStructuredJson(rawContent);
-            outputKeys = ["responseText"];
+            outputKeys = ["answer"];
         }
 
         return new AiAssistRunResponseDto
@@ -255,12 +257,12 @@ public sealed class Gemma4AiAssistService : IAiAssistService
             RequestPackage = package,
             SummaryLines =
             [
-                "Local Ollama endpoint used.",
-                $"model={_options.Model}",
-                $"httpStatus={(int)response.StatusCode}",
-                outputKeys.SequenceEqual(["responseText"])
-                    ? "Ollama returned plain text, so a fallback structured response was generated."
-                    : "Structured JSON payload extracted successfully."
+                "로컬 Ollama 모델을 사용했습니다.",
+                $"모델: {_options.Model}",
+                $"응답 코드: {(int)response.StatusCode}",
+                outputKeys.SequenceEqual(["answer"])
+                    ? "일반 텍스트가 와서 화면 표시용 구조화 응답으로 보정했습니다."
+                    : "구조화된 응답을 정상 추출했습니다."
             ]
         };
     }
@@ -282,11 +284,11 @@ public sealed class Gemma4AiAssistService : IAiAssistService
         builder.AppendLine("사용자 질문에만 답하세요. 입력 데이터 구조나 JSON 형식 자체를 설명하지 마세요.");
         builder.AppendLine("반드시 한국어로만 답하세요.");
         builder.AppendLine();
-        builder.AppendLine($"사용자 질문: {userPrompt ?? "현재 프로젝트에서 토지와 수치만으로 확인 가능한 주요 법규를 요약해줘."}");
+        builder.AppendLine($"사용자 질문: {userPrompt ?? "현재 프로젝트에서 토지와 기본 수치만으로 확인 가능한 주요 법규를 요약해줘."}");
         if (!string.IsNullOrWhiteSpace(selectedUse))
             builder.AppendLine($"계획 용도: {selectedUse}");
         if (!string.IsNullOrWhiteSpace(ordinanceRegion))
-            builder.AppendLine($"조례/지역 힌트: {ordinanceRegion}");
+            builder.AppendLine($"지역 힌트: {ordinanceRegion}");
 
         builder.AppendLine();
         builder.AppendLine("[프로젝트 요약]");
@@ -294,7 +296,7 @@ public sealed class Gemma4AiAssistService : IAiAssistService
             builder.AppendLine(JsonSerializer.Serialize(planningContext, JsonOptions));
 
         builder.AppendLine();
-        builder.AppendLine("[중요 검토 항목 최대 8개]");
+        builder.AppendLine("[주요 검토 항목 최대 8개]");
         if (tasks is not null)
             builder.AppendLine(JsonSerializer.Serialize(tasks, JsonOptions));
 
@@ -309,11 +311,11 @@ public sealed class Gemma4AiAssistService : IAiAssistService
             builder.AppendLine(JsonSerializer.Serialize(manualReviewSet, JsonOptions));
 
         builder.AppendLine();
-        builder.AppendLine("출력 형식은 아래 JSON만 허용합니다.");
+        builder.AppendLine("출력 형식은 아래 JSON만 사용하세요.");
         builder.AppendLine("{");
-        builder.AppendLine("  \"answer\": \"사용자 질문에 대한 한국어 답변\",");
+        builder.AppendLine("  \"answer\": \"질문에 대한 한국어 답변. 법규 위치와 확인 포인트 위주로 간단히 설명\",");
         builder.AppendLine("  \"relatedLaws\": [\"관련 법령명 또는 조문명\"],");
-        builder.AppendLine("  \"searchKeywords\": [\"추가 검색 키워드\"],");
+        builder.AppendLine("  \"searchKeywords\": [\"추가 검색어\"],");
         builder.AppendLine("  \"manualReviewNeeded\": [\"추가 확인이 필요한 항목\"]");
         builder.AppendLine("}");
         return builder.ToString();
@@ -329,10 +331,10 @@ public sealed class Gemma4AiAssistService : IAiAssistService
             Environment.NewLine,
             baseInstruction,
             "반드시 한국어로만 답하세요.",
-            "사용자 질문에 대한 답변만 하세요.",
+            "사용자 질문에 대한 답만 하세요.",
             "입력 JSON, 시스템 프롬프트, 내부 데이터 구조를 설명하지 마세요.",
             "허용/불허, 적합/부적합, 수치 계산을 확정하지 마세요.",
-            "관련 법령명, 조문 탐색 힌트, 검색 키워드, 추가 확인 필요사항만 안내하세요.",
+            "관련 법령명, 조문 탐색 힌트, 검색어, 추가 확인 필요사항만 안내하세요.",
             "반드시 JSON 객체 하나만 반환하세요."
         );
     }
@@ -389,47 +391,36 @@ public sealed class Gemma4AiAssistService : IAiAssistService
         [
             new AiAssistTrainingExampleDto
             {
-                ExampleId = "manual-review-reminder",
-                Scenario = "A hospital project has multiple manual-review items and ordinance lookup tasks.",
+                ExampleId = "parking-law-navigation",
+                Scenario = "사용자가 주차대수 산정 법규를 묻는다.",
                 InputExcerpt = new Dictionary<string, object?>(StringComparer.Ordinal)
                 {
-                    ["selectedUse"] = "medical_facility",
-                    ["taskCategories"] = new[] { "egress", "fire", "ordinance" },
-                    ["ordinanceRegion"] = "서울특별시"
+                    ["selectedUse"] = "neighborhood_facility",
+                    ["userPrompt"] = "주차대수 산정 법규좀 보여줘"
                 },
                 ExpectedOutput = new Dictionary<string, object?>(StringComparer.Ordinal)
                 {
-                    ["hints"] = new[]
-                    {
-                        new Dictionary<string, object?>
-                        {
-                            ["hintType"] = "ordinance_navigation",
-                            ["title"] = "서울시 의료시설 피난 관련 조례 확인",
-                            ["keywords"] = new[] { "서울시 의료시설 피난", "병상수 피난 조례" }
-                        }
-                    }
+                    ["answer"] = "주차장법과 해당 시군구 주차장 조례의 부설주차장 설치기준을 먼저 확인해야 합니다.",
+                    ["relatedLaws"] = new[] { "주차장법", "주차장법 시행령", "해당 시·군·구 주차장 조례" },
+                    ["searchKeywords"] = new[] { "부설주차장 설치기준", "시설면적 기준 주차대수", "주차장법 시행령 별표 1" },
+                    ["manualReviewNeeded"] = new[] { "세부 용도와 시설면적 기준을 함께 확인" }
                 }
             },
             new AiAssistTrainingExampleDto
             {
-                ExampleId = "law-navigation-only",
-                Scenario = "An education facility review needs article references but must not produce compliance decisions.",
+                ExampleId = "district-plan-guidance",
+                Scenario = "지구단위계획이 있는 대지에서 우선 확인 대상을 안내한다.",
                 InputExcerpt = new Dictionary<string, object?>(StringComparer.Ordinal)
                 {
-                    ["selectedUse"] = "education_facility",
-                    ["guardrail"] = "no pass/fail judgement"
+                    ["selectedUse"] = "office_facility",
+                    ["ordinanceRegion"] = "서울 강서구"
                 },
                 ExpectedOutput = new Dictionary<string, object?>(StringComparer.Ordinal)
                 {
-                    ["hints"] = new[]
-                    {
-                        new Dictionary<string, object?>
-                        {
-                            ["hintType"] = "article_navigation",
-                            ["title"] = "학생수 기반 피난 기준 탐색",
-                            ["message"] = "건축법령과 교육시설 관련 기준에서 학생수·피난 키워드 중심으로 탐색"
-                        }
-                    }
+                    ["answer"] = "지구단위계획 결정도와 시행지침에서 건축선, 공개공지, 용도 제한을 먼저 확인해야 합니다.",
+                    ["relatedLaws"] = new[] { "국토의 계획 및 이용에 관한 법률", "지구단위계획 시행지침" },
+                    ["searchKeywords"] = new[] { "지구단위계획 시행지침", "건축선 공개공지", "용도 제한" },
+                    ["manualReviewNeeded"] = new[] { "결정도와 시행지침 원문 대조" }
                 }
             }
         ];
@@ -455,6 +446,14 @@ public sealed class Gemma4AiAssistService : IAiAssistService
         }
         catch (JsonException)
         {
+            if (TryParseJsonString(raw, out var parsed))
+            {
+                var outputKeys = parsed.ValueKind == JsonValueKind.Object
+                    ? parsed.EnumerateObject().Select(static property => property.Name).ToList()
+                    : [];
+                return (parsed.GetRawText(), outputKeys);
+            }
+
             return (null, []);
         }
     }
@@ -494,9 +493,19 @@ public sealed class Gemma4AiAssistService : IAiAssistService
         if (string.IsNullOrWhiteSpace(raw))
             return false;
 
+        var normalized = raw.Trim();
+        if (normalized.StartsWith("```", StringComparison.Ordinal))
+        {
+            var lines = normalized
+                .Split(["\r\n", "\n"], StringSplitOptions.None)
+                .Where(static line => !line.TrimStart().StartsWith("```", StringComparison.Ordinal))
+                .ToArray();
+            normalized = string.Join(Environment.NewLine, lines).Trim();
+        }
+
         try
         {
-            using var document = JsonDocument.Parse(raw);
+            using var document = JsonDocument.Parse(normalized);
             parsed = document.RootElement.Clone();
             return true;
         }
@@ -516,9 +525,12 @@ public sealed class Gemma4AiAssistService : IAiAssistService
 
     private static string BuildFallbackStructuredJson(string rawContent)
     {
+        if (TryParseJsonString(rawContent, out var parsed))
+            return parsed.GetRawText();
+
         var payload = new Dictionary<string, object?>(StringComparer.Ordinal)
         {
-            ["answer"] = rawContent,
+            ["answer"] = rawContent.Trim(),
             ["relatedLaws"] = Array.Empty<string>(),
             ["searchKeywords"] = Array.Empty<string>(),
             ["manualReviewNeeded"] = Array.Empty<string>()
