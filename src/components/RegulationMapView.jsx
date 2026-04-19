@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { CircleMarker, MapContainer, Polygon, Polyline, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 
 function MapClickHandler({ onMapClick }) {
@@ -14,19 +14,31 @@ function MapClickHandler({ onMapClick }) {
 
 function MapCenterSync({ selectedCoordinate, outlines }) {
   const map = useMap()
+  const lastSignatureRef = useRef(null)
 
   useEffect(() => {
     const validOutlines = Array.isArray(outlines)
       ? outlines.filter((outline) => Array.isArray(outline) && outline.length >= 2)
       : []
+    const outlineSignature = JSON.stringify(validOutlines)
+    const selectedSignature = selectedCoordinate
+      ? `${selectedCoordinate.lat}:${selectedCoordinate.lon}`
+      : 'none'
+    const nextSignature = `${selectedSignature}|${outlineSignature}`
+
+    if (lastSignatureRef.current === nextSignature) {
+      return
+    }
 
     if (validOutlines.length > 0) {
       map.fitBounds(validOutlines.flat(), { padding: [24, 24] })
+      lastSignatureRef.current = nextSignature
       return
     }
 
     if (selectedCoordinate) {
       map.setView([selectedCoordinate.lat, selectedCoordinate.lon], map.getZoom())
+      lastSignatureRef.current = nextSignature
     }
   }, [map, outlines, selectedCoordinate])
 

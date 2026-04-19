@@ -233,6 +233,24 @@ export default function BuildingReviewPanel({ selectedUse, coordinate, onBuildin
     if (!selectedUse || !data) return
 
     const prompt = aiQuery.trim() || '현재 프로젝트에서 토지와 수치만으로 확인 가능한 주요 법규와 추가 확인 필요 항목을 요약해줘.'
+    const compactTasks = (data.tasks ?? []).slice(0, 8).map(task => ({
+      category: task.category,
+      title: task.title,
+      status: task.status,
+      reason: task.reason,
+      priority: task.priority,
+    }))
+    const compactReviewItems = (data.reviewItems ?? []).slice(0, 8).map(item => ({
+      title: item.title,
+      judgeStatus: item.judgeStatus,
+      judgeNote: item.judgeNote,
+      relatedLaws: item.relatedLaws?.slice?.(0, 4) ?? [],
+    }))
+    const compactManualReviews = (data.manualReviews ?? []).slice(0, 6).map(item => ({
+      title: item.title,
+      prompt: item.prompt,
+      searchHints: item.searchHints?.slice?.(0, 4) ?? [],
+    }))
     const requestBody = {
       selectedUse,
       userPrompt: prompt,
@@ -246,9 +264,9 @@ export default function BuildingReviewPanel({ selectedUse, coordinate, onBuildin
         applicableLawSummary: data.applicableLaws?.summaryLines ?? [],
         reviewTriggers: data.reviewTriggers ?? [],
       },
-      reviewItems: data.reviewItems ?? [],
-      tasks: data.tasks ?? [],
-      manualReviewSet: data.manualReviews ?? [],
+      reviewItems: compactReviewItems,
+      tasks: compactTasks,
+      manualReviewSet: compactManualReviews,
       ordinanceRegion: data.location?.resolvedAddress ?? data.location?.inputAddress ?? null,
     }
 
