@@ -233,6 +233,8 @@ export default function BuildingReviewPanel({ selectedUse, coordinate, onBuildin
     if (!selectedUse || !data) return
 
     const prompt = aiQuery.trim() || '현재 프로젝트에서 토지와 수치만으로 확인 가능한 주요 법규와 추가 확인 필요 항목을 요약해줘.'
+    setOfficialLawQuery(prompt)
+    void runOfficialLawSearch(prompt)
     const compactTasks = (data.tasks ?? []).slice(0, 8).map(task => ({
       category: task.category,
       title: task.title,
@@ -289,8 +291,8 @@ export default function BuildingReviewPanel({ selectedUse, coordinate, onBuildin
     }
   }
 
-  const handleOfficialLawSearch = async () => {
-    const query = officialLawQuery.trim()
+  const runOfficialLawSearch = useCallback(async (overrideQuery) => {
+    const query = (overrideQuery ?? officialLawQuery).trim()
     if (!query) return
 
     setOfficialLawLoading(true)
@@ -316,7 +318,11 @@ export default function BuildingReviewPanel({ selectedUse, coordinate, onBuildin
     } finally {
       setOfficialLawLoading(false)
     }
-  }
+  }, [officialLawQuery])
+
+  const handleOfficialLawSearch = useCallback(() => {
+    runOfficialLawSearch()
+  }, [runOfficialLawSearch])
 
   const handleOfficialLawBody = async (item) => {
     if (!item) return
@@ -940,7 +946,7 @@ function AiAssistWidget({ status, preview, loading, error, query, onQueryChange,
             </span>
           </div>
 
-          {runResult.summaryLines?.length > 0 && (
+          {!runResult.success && runResult.summaryLines?.length > 0 && (
             <div style={{ marginTop: 6, display: 'grid', gap: 4 }}>
               {runResult.summaryLines.map((line, index) => (
                 <div key={`${line}-${index}`} style={{ fontSize: 11, color: '#334155', lineHeight: 1.6 }}>
